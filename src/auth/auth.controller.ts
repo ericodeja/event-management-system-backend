@@ -9,16 +9,10 @@ export class AuthController {
 
   @Post('/register')
   async register(@Body() userData: CreateUser, @Res() res: Response) {
-    try {
-      const response = await this.authService.createUser(userData);
-      return res.status(201).json({
-        message: 'Registration successful. Please verify your email.',
-        user: response,
-      });
-    } catch (err) {
-      return res.status(500).json({
-        message: err instanceof Error ? err.message : 'Registration failed',
-      });
-    }
+    const response = await this.authService.createUser(userData);
+    return res.status(201).json({
+      message: 'Registration successful. Please verify your email.',
+      user: response,
+    });
   }
 }

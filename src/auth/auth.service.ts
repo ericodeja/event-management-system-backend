@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, ConflictException } from '@nestjs/common';
 import { CreateUser } from './dto/createUser.dto';
 import { PrismaService } from 'src/lib/prisma.service';
 import bcrypt from 'bcrypt';
@@ -9,20 +9,32 @@ export class AuthService {
     try {
       return bcrypt.hash(password, 10);
     } catch (err) {
-      throw new Error('Error hashing password:' + err);
+      throw new HttpException('Password hash failed' + err.message, 500);
     }
   }
   private async comparePassword(plain: string, hash: string): Promise<boolean> {
     try {
       return bcrypt.compare(plain, hash);
     } catch (err) {
-      throw new Error('Error comparing password:' + err);
+      throw new HttpException(
+        'Password comparison failed' + err.message,
+        err.status,
+      );
     }
   }
 
   async createUser(userData: CreateUser) {
+    const ifuserExit = await this.prisma.user.findUnique({
+      where: {
+        email: userData.email,
+      },
+    });
+    if (ifuserExit) {
+      throw new ConflictException('User already exists');
+    }
+
+    const hashedPassword = await this.hashPassword(userData.password);
     try {
-      const hashedPassword = await this.hashPassword(userData.password);
       const user = await this.prisma.user.create({
         data: {
           name: userData.name,
@@ -31,6 +43,7 @@ export class AuthService {
           role: userData.role || 'attendee',
         },
       });
+
       return {
         id: user.id,
         name: user.name,
@@ -40,7 +53,7 @@ export class AuthService {
         createdAt: user.createdAt,
       };
     } catch (err) {
-      throw new Error(err);
+      throw new HttpException('User creation failed' + err.message, 500);
     }
   }
 }
