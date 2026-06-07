@@ -1,0 +1,296 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+enum Role {
+  admin
+  organizer
+  attendee
+}
+
+enum VenueType {
+  physical
+  virtual
+}
+
+enum EventStatus {
+  draft
+  published
+  cancelled
+  ended
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  failed
+  refunded
+}
+
+enum TicketStatus {
+  active
+  used
+  cancelled
+}
+
+enum DiscountType {
+  flat
+  percent
+}
+
+enum OrganizerStatus {
+  pending
+  approved
+  rejected
+}
+
+
+model User {
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String   @db.VarChar(100)
+  email         String   @unique @db.VarChar(255)
+  passwordHash  String
+  role          Role     @default(attendee)
+  avatarUrl     String?
+  phone         String?  @db.VarChar(20)
+  emailVerified Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // relations
+  refreshTokens    RefreshToken[]
+  organizerProfile OrganizerProfile?
+  orders           Order[]
+  tickets          Ticket[]          @relation("CheckedInBy")
+
+  @@map("users")
+}
+
+
+model RefreshToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String @db.Uuid
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @db.VarChar(255)
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("password_reset_tokens")
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  email     String   @db.VarChar(255)
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("email_verification_tokens")
+}
+
+
+model OrganizerProfile {
+  id          String          @id @default(uuid()) @db.Uuid
+  userId      String          @unique @db.Uuid
+  orgName     String          @db.VarChar(150)
+  bio         String?         @db.VarChar(500)
+  website     String?         @db.VarChar(255)
+  socialLinks Json?
+  status      OrganizerStatus @default(pending)
+  rejectedReason String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events Event[]
+
+  @@map("organizer_profiles")
+}
+
+
+model Category {
+  id     Int    @id @default(autoincrement())
+  name   String @unique @db.VarChar(100)
+  slug   String @unique @db.VarChar(100)
+
+  events Event[]
+
+  @@map("categories")
+}
+
+model Event {
+  id             String      @id @default(uuid()) @db.Uuid
+  organizerId    String      @db.Uuid
+  categoryId     Int
+  title          String      @db.VarChar(150)
+  slug           String      @unique @db.VarChar(200)
+  description    String
+  coverImageUrl  String?
+  venueType      VenueType
+  venueAddress   String?     @db.VarChar(255)
+  virtualLink    String?     @db.VarChar(255)
+  city           String      @db.VarChar(100)
+  country        String      @db.VarChar(2)
+  startTime      DateTime
+  endTime        DateTime
+  timezone       String      @default("Africa/Lagos") @db.VarChar(50)
+  status         EventStatus @default(draft)
+  isFeatured     Boolean     @default(false)
+  capacity       Int?
+  cancelReason   String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  // relations
+  organizer   OrganizerProfile @relation(fields: [organizerId], references: [id])
+  category    Category         @relation(fields: [categoryId], references: [id])
+  ticketTypes TicketType[]
+  orders      Order[]
+  promoCodes  PromoCode[]
+  analytics   EventAnalytics[]
+
+  @@map("events")
+}
+
+
+model TicketType {
+  id                String   @id @default(uuid()) @db.Uuid
+  eventId           String   @db.Uuid
+  name              String   @db.VarChar(100)
+  description       String?  @db.VarChar(500)
+  price             Int
+  currency          String   @default("NGN") @db.VarChar(10)
+  quantityAvailable Int
+  quantitySold      Int      @default(0)
+  saleStart         DateTime
+  saleEnd           DateTime
+  isVisible         Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // relations
+  event      Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+
+  @@map("ticket_types")
+}
+
+model PromoCode {
+  id            String       @id @default(uuid()) @db.Uuid
+  eventId       String       @db.Uuid
+  code          String       @db.VarChar(50)
+  discountType  DiscountType
+  discountValue Int
+  usageLimit    Int
+  timesUsed     Int          @default(0)
+  validFrom     DateTime
+  validUntil    DateTime
+  isActive      Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  // relations
+  event  Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@unique([eventId, code])
+  @@map("promo_codes")
+}
+
+model Order {
+  id                String        @id @default(uuid()) @db.Uuid
+  userId            String        @db.Uuid
+  eventId           String        @db.Uuid
+  promoCodeId       String?       @db.Uuid
+  totalAmount       Int
+  currency          String        @default("NGN") @db.VarChar(10)
+  paymentStatus     PaymentStatus @default(pending)
+  paymentReference  String        @unique @db.VarChar(100)
+  paymentProvider   String        @default("paystack") @db.VarChar(50)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // relations
+  user       User        @relation(fields: [userId], references: [id])
+  event      Event       @relation(fields: [eventId], references: [id])
+  promoCode  PromoCode?  @relation(fields: [promoCodeId], references: [id])
+  items      OrderItem[]
+
+  @@map("orders")
+}
+
+
+
+model OrderItem {
+  id           String @id @default(uuid()) @db.Uuid
+  orderId      String @db.Uuid
+  ticketTypeId String @db.Uuid
+  quantity     Int
+  unitPrice    Int
+  subtotal     Int
+
+  // relations
+  order      Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  ticketType TicketType @relation(fields: [ticketTypeId], references: [id])
+  tickets    Ticket[]
+
+  @@map("order_items")
+}
+
+model Ticket {
+  id             String       @id @default(uuid()) @db.Uuid
+  orderItemId    String       @db.Uuid
+  ticketCode     String       @unique @db.VarChar(50)
+  qrCodeUrl      String?
+  attendeeName   String       @db.VarChar(100)
+  attendeeEmail  String       @db.VarChar(255)
+  status         TicketStatus @default(active)
+  checkedInAt    DateTime?
+  checkedInById  String?      @db.Uuid
+  createdAt      DateTime     @default(now())
+
+  // relations
+  orderItem   OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  checkedInBy User?     @relation("CheckedInBy", fields: [checkedInById], references: [id])
+
+  @@map("tickets")
+}
+
+model EventAnalytics {
+  id          String   @id @default(uuid()) @db.Uuid
+  eventId     String   @db.Uuid
+  views       Int      @default(0)
+  uniqueViews Int      @default(0)
+  date        DateTime @db.Date
+
+  // relations
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, date])
+  @@map("event_analytics")
+}
