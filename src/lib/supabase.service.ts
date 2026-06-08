@@ -14,15 +14,15 @@ export class SupabaseService {
     );
   }
 
-  async uploadFile(file: Express.Multer.File) {
+  async uploadFile(bucketName: string, file: Express.Multer.File) {
     try {
       const sanitizedName = file.originalname
         .replace(/\s+/g, '-') // replace spaces with hyphens
         .replace(/[^a-zA-Z0-9._-]/g, ''); // remove special characters
 
-      const fileName = `avatars/${Date.now()}-${sanitizedName}`;
+      const fileName = `${bucketName}/${Date.now()}-${sanitizedName}`;
       const { data, error } = await this.supabase.storage
-        .from('avatars')
+        .from(bucketName)
         .upload(fileName, file.buffer);
 
       if (error) {
@@ -34,7 +34,7 @@ export class SupabaseService {
         );
       }
       const { data: publicUrlData } = this.supabase.storage
-        .from('avatars')
+        .from(bucketName)
         .getPublicUrl(data.path);
 
       return publicUrlData?.publicUrl;

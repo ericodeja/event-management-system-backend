@@ -45,7 +45,7 @@ export class UserController {
           }),
           new FileTypeValidator({
             fileType: /^image\/(jpeg|png|webp)$/,
-            errorMessage: 'File type must be JPEG or PNG',
+            errorMessage: 'Invalid file type',
           }),
         ],
         fileIsRequired: false,

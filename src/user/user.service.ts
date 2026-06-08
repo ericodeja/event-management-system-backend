@@ -32,7 +32,7 @@ export class UserService {
         select: { avatarUrl: true },
       });
       const avatarUrl = avatar
-        ? await this.supabaseService.uploadFile(avatar)
+        ? await this.supabaseService.uploadFile('avatars', avatar)
         : undefined;
 
       const user = await this.prisma.user.update({
