@@ -6,9 +6,10 @@ import { PrismaService } from './lib/prisma.service';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { OrganizerModule } from './organizer/organizer.module';
+import { EventModule } from './event/event.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), AuthModule, UserModule, OrganizerModule],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), AuthModule, UserModule, OrganizerModule, EventModule],
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })
