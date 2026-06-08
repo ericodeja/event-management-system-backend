@@ -40,7 +40,6 @@ export class AuthService {
           name: userData.name,
           email: userData.email,
           passwordHash: hashedPassword,
-          role: userData.role || 'attendee',
         },
       });
 
