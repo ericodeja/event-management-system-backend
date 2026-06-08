@@ -7,7 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { Prisma } from '../../generated/prisma/client';
+import { Prisma } from '../../../generated/prisma/client';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -42,8 +42,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         }
         case 'P2025': {
           status = HttpStatus.NOT_FOUND;
-          message =
-            (prismaError.meta?.cause as string) ?? 'Record not found';
+          message = (prismaError.meta?.cause as string) ?? 'Record not found';
           break;
         }
         case 'P2003': {
@@ -85,4 +84,3 @@ export class HttpExceptionFilter implements ExceptionFilter {
     });
   }
 }
-
