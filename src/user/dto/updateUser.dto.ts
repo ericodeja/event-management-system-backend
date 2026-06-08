@@ -1,7 +1,6 @@
 import {
   IsOptional,
   IsString,
-  IsUrl,
   MaxLength,
   MinLength,
   IsUUID,
@@ -22,9 +21,4 @@ export class UpdateUser {
   @IsString()
   @IsOptional()
   phone?: string;
-
-  @IsString()
-  @IsUrl()
-  @IsOptional()
-  avatarUrl?: string;
 }
