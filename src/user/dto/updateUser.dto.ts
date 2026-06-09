@@ -8,10 +8,6 @@ import {
 } from 'class-validator';
 
 export class UpdateUser {
-  @IsUUID()
-  @IsNotEmpty()
-  id: string;
-
   @IsString()
   @MinLength(2)
   @MaxLength(100)

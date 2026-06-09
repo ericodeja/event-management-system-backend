@@ -25,10 +25,14 @@ export class UserService {
     return user;
   }
 
-  async updateMe(updateData: UpdateUser, avatar?: Express.Multer.File) {
+  async updateMe(
+    id: string,
+    updateData: UpdateUser,
+    avatar?: Express.Multer.File,
+  ) {
     try {
       const currentUser = await this.prisma.user.findUnique({
-        where: { id: updateData.id },
+        where: { id },
         select: { avatarUrl: true },
       });
       const avatarUrl = avatar
@@ -37,7 +41,7 @@ export class UserService {
 
       const user = await this.prisma.user.update({
         where: {
-          id: updateData.id,
+          id,
         },
         data: {
           ...updateData,
