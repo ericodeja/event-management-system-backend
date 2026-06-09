@@ -8,9 +8,6 @@ import {
   IsOptional,
 } from 'class-validator';
 export class CreateOrganizerProfile {
-  @IsUUID()
-  userId: string;
-
   @IsString()
   @MinLength(3)
   @MaxLength(100)

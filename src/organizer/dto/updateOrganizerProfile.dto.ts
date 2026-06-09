@@ -5,15 +5,9 @@ import {
   MinLength,
   IsObject,
   IsOptional,
-  IsEnum,
-  IsUUID,
 } from 'class-validator';
-import { OrganizerStatus } from '../../generated/prisma/enums';
 
 export class UpdateOrganizerProfileDto {
-  @IsUUID()
-  userId: string;
-
   @IsString()
   @MinLength(3)
   @MaxLength(100)
