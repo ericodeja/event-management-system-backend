@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Role } from 'src/generated/prisma/enums';
@@ -7,23 +7,29 @@ import { PrismaService } from './prisma.service';
 @Injectable()
 export class TokenService {
   constructor(
-    private readonly jwtSerice: JwtService,
+    private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
   ) {}
 
-  async generateAuthTokens(userId: string, role: Role, username: string) {
+  async getAccessToken(userId: string, role: Role, username: string) {
     const payload = { sub: userId, username, role };
-    const accessToken = await this.jwtSerice.signAsync(payload, {
+    const accessToken = await this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('ACCESS_TOKEN_SECRET'),
       expiresIn: '15m',
     });
+
+    return accessToken;
+  }
+
+  async getRefreshToken(userId: string, role: Role, username: string) {
+    const payload = { sub: userId, username, role };
 
     await this.prisma.refreshToken.deleteMany({
       where: { userId },
     });
 
-    const refreshToken = await this.jwtSerice.signAsync(payload, {
+    const refreshToken = await this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
       expiresIn: '7d',
     });
@@ -34,6 +40,18 @@ export class TokenService {
       data: { userId, token: refreshToken, expiresAt },
     });
 
-    return { accessToken, refreshToken };
+    return refreshToken;
+  }
+
+  async verifyToken(token: string, type: string) {
+    try {
+      const payload = this.jwtService.verify(token, {
+        secret: this.configService.get(`${type}_TOKEN_SECRET`),
+      });
+
+      return payload;
+    } catch (error) {
+      throw new HttpException(error.message, error.status || 500);
+    }
   }
 }

@@ -4,6 +4,7 @@ import {
   ConflictException,
   NotFoundException,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 import { CreateUser } from './dto/createUser.dto';
 import { LoginUser } from './dto/loginUser.dto';
@@ -11,29 +12,13 @@ import { PrismaService } from 'src/lib/prisma.service';
 
 import bcrypt from 'bcrypt';
 import { TokenService } from 'src/lib/token.service';
+import { RefreshTokenDto } from './dto/refreshToken.dto';
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly tokenService: TokenService,
   ) {}
-  private async hashPassword(password: string): Promise<string> {
-    try {
-      return await bcrypt.hash(password, 10);
-    } catch (err) {
-      throw new HttpException('Password hash failed' + err.message, 500);
-    }
-  }
-  private async comparePassword(plain: string, hash: string): Promise<boolean> {
-    try {
-      return await bcrypt.compare(plain, hash);
-    } catch (err) {
-      throw new HttpException(
-        'Password comparison failed' + err.message,
-        err.status,
-      );
-    }
-  }
 
   async createUser(userData: CreateUser) {
     const ifuserExit = await this.prisma.user.findUnique({
@@ -94,12 +79,16 @@ export class AuthService {
         throw new UnauthorizedException('Invalid credentials');
       }
 
-      const { accessToken, refreshToken } =
-        await this.tokenService.generateAuthTokens(
-          user.id,
-          user.role,
-          user.name,
-        );
+      const accessToken = await this.tokenService.getAccessToken(
+        user.id,
+        user.role,
+        user.name,
+      );
+      const refreshToken = await this.tokenService.getAccessToken(
+        user.id,
+        user.role,
+        user.name,
+      );
 
       return {
         accessToken,
@@ -113,6 +102,63 @@ export class AuthService {
       };
     } catch (error) {
       throw new HttpException(error.message, error.status || 500);
+    }
+  }
+
+  async refresh(refreshTokenDto: RefreshTokenDto) {
+    try {
+      const payload = await this.tokenService.verifyToken(
+        refreshTokenDto.token,
+        'REFRESH',
+      );
+
+      if (!payload) {
+        throw new BadRequestException('Invalid or expired token');
+      }
+
+      const oldToken = await this.prisma.refreshToken.findUnique({
+        where: { token: refreshTokenDto.token },
+      });
+
+      if (!oldToken) {
+        throw new BadRequestException('Invalid or expired token');
+      }
+
+      if (new Date() > oldToken.expiresAt) {
+        throw new UnauthorizedException('Invalid or expired token');
+      }
+
+      const newAccessToken = this.tokenService.getAccessToken(
+        payload.userId,
+        payload.role,
+        payload.username,
+      );
+      const newRefreshToken = this.tokenService.getRefreshToken(
+        payload.userId,
+        payload.role,
+        payload.username,
+      );
+
+      return { newAccessToken, newRefreshToken };
+    } catch (error) {
+      throw new HttpException(error.message, error.status || 500);
+    }
+  }
+  private async hashPassword(password: string): Promise<string> {
+    try {
+      return await bcrypt.hash(password, 10);
+    } catch (err) {
+      throw new HttpException('Password hash failed' + err.message, 500);
+    }
+  }
+  private async comparePassword(plain: string, hash: string): Promise<boolean> {
+    try {
+      return await bcrypt.compare(plain, hash);
+    } catch (err) {
+      throw new HttpException(
+        'Password comparison failed' + err.message,
+        err.status,
+      );
     }
   }
 }

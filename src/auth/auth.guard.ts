@@ -7,12 +7,14 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
+import { TokenService } from 'src/lib/token.service';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
+    private readonly tokenService: TokenService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -22,9 +24,7 @@ export class JwtAuthGuard implements CanActivate {
     if (!token) throw new UnauthorizedException('No token provided');
 
     try {
-      const payload = this.jwt.verify(token, {
-        secret: this.config.get('ACCESS_TOKEN_SECRET'),
-      });
+      const payload = this.tokenService.verifyToken(token, 'ACCESS');
       request['user'] = payload;
     } catch {
       throw new UnauthorizedException('Invalid or expired token');

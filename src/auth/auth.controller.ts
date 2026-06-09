@@ -2,6 +2,7 @@ import { Controller, Post, Body, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUser } from './dto/createUser.dto';
 import { LoginUser } from './dto/loginUser.dto';
+import { RefreshTokenDto } from './dto/refreshToken.dto';
 import type { Response } from 'express';
 
 @Controller('auth')
@@ -24,5 +25,10 @@ export class AuthController {
     return res.status(200).json({
       result,
     });
+  }
+
+  @Post('/refresh')
+  async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
+    const result = await this.refreshToken(refreshTokenDto);
   }
 }
