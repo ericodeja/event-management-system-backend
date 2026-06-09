@@ -6,10 +6,16 @@ import { UpdateOrganizerProfileDto } from './dto/updateOrganizerProfile.dto';
 @Injectable()
 export class OrganizerService {
   constructor(private readonly prisma: PrismaService) {}
-  async apply(createOrganizerProfileDto: CreateOrganizerProfile) {
+  async apply(
+    userId: string,
+    createOrganizerProfileDto: CreateOrganizerProfile,
+  ) {
     try {
       const organizer = await this.prisma.organizerProfile.create({
-        data: createOrganizerProfileDto,
+        data: {
+          userId,
+          ...createOrganizerProfileDto,
+        },
         omit: { rejectedReason: true, userId: true, id: true },
       });
       return organizer;
@@ -18,16 +24,19 @@ export class OrganizerService {
     }
   }
 
-  async update(updateOrganizerProfileDto: UpdateOrganizerProfileDto) {
+  async update(
+    userId: string,
+    updateOrganizerProfileDto: UpdateOrganizerProfileDto,
+  ) {
     try {
       const currentOrganizer = await this.prisma.organizerProfile.findUnique({
-        where: { userId: updateOrganizerProfileDto.userId },
+        where: { userId },
       });
       if (!currentOrganizer) {
         throw new NotFoundException('Organizer profile not found');
       }
       const organizer = await this.prisma.organizerProfile.update({
-        where: { userId: updateOrganizerProfileDto.userId },
+        where: { userId },
         data: updateOrganizerProfileDto,
         omit: {
           updatedAt: true,
