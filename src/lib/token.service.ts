@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Role } from 'src/generated/prisma/enums';
 import { PrismaService } from './prisma.service';
+import { UserPayload } from 'src/auth/dto/types/payload.type';
 
 @Injectable()
 export class TokenService {
@@ -23,7 +24,7 @@ export class TokenService {
   }
 
   async getRefreshToken(userId: string, role: Role, username: string) {
-    const payload = { sub: userId, username, role };
+    const payload: UserPayload = { sub: userId, username, role };
 
     await this.prisma.refreshToken.deleteMany({
       where: { userId },
@@ -45,7 +46,7 @@ export class TokenService {
 
   async verifyToken(token: string, type: string) {
     try {
-      const payload = this.jwtService.verify(token, {
+      const payload = this.jwtService.verify<UserPayload>(token, {
         secret: this.configService.get(`${type}_TOKEN_SECRET`),
       });
 

@@ -84,7 +84,7 @@ export class AuthService {
         user.role,
         user.name,
       );
-      const refreshToken = await this.tokenService.getAccessToken(
+      const refreshToken = await this.tokenService.getRefreshToken(
         user.id,
         user.role,
         user.name,
@@ -100,6 +100,16 @@ export class AuthService {
           role: user.role,
         },
       };
+    } catch (error) {
+      throw new HttpException(error.message, error.status || 500);
+    }
+  }
+
+  async logOut(userId: string) {
+    try {
+      return await this.prisma.refreshToken.deleteMany({
+        where: { userId },
+      });
     } catch (error) {
       throw new HttpException(error.message, error.status || 500);
     }
@@ -128,13 +138,13 @@ export class AuthService {
         throw new UnauthorizedException('Invalid or expired token');
       }
 
-      const newAccessToken = this.tokenService.getAccessToken(
-        payload.userId,
+      const newAccessToken = await this.tokenService.getAccessToken(
+        payload.sub,
         payload.role,
         payload.username,
       );
-      const newRefreshToken = this.tokenService.getRefreshToken(
-        payload.userId,
+      const newRefreshToken = await this.tokenService.getRefreshToken(
+        payload.sub,
         payload.role,
         payload.username,
       );
@@ -144,6 +154,7 @@ export class AuthService {
       throw new HttpException(error.message, error.status || 500);
     }
   }
+
   private async hashPassword(password: string): Promise<string> {
     try {
       return await bcrypt.hash(password, 10);
