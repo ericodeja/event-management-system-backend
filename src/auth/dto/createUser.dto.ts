@@ -1,11 +1,10 @@
 import {
   IsEmail,
-  IsEnum,
-  IsOptional,
   IsString,
   IsStrongPassword,
   MaxLength,
   MinLength,
+  Length
 } from 'class-validator';
 
 export class CreateUser {
@@ -15,6 +14,7 @@ export class CreateUser {
   name: string;
 
   @IsEmail()
+  @Length(5, 100)
   email: string;
 
   @IsString()
