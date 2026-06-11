@@ -13,11 +13,6 @@ import { EventStatus, VenueType } from 'src/generated/prisma/enums';
 import { Type } from 'class-transformer';
 
 export class CreateEventDto {
-  @IsString()
-  @IsNotEmpty()
-  @IsUUID()
-  organizerId: string;
-
   @Type(() => Number)
   @IsInt()
   @IsNotEmpty()

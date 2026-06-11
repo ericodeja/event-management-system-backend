@@ -1,12 +1,9 @@
 import {
   Controller,
-  Get,
   Post,
   Body,
-  Patch,
-  Param,
-  Delete,
   Res,
+  Req,
   UploadedFile,
   ParseFilePipe,
   MaxFileSizeValidator,
@@ -16,7 +13,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { EventService } from './event.service';
 import { CreateEventDto } from './dto/create-event.dto';
-import type { Response } from 'express';
+import type { Response , Request} from 'express';
 
 @Controller('event')
 export class EventController {
@@ -26,6 +23,7 @@ export class EventController {
   @UseInterceptors(FileInterceptor('coverImage'))
   async create(
     @Res() res: Response,
+    @Req() req: Request,
     @Body() createEventDto: CreateEventDto,
     @UploadedFile(
       new ParseFilePipe({
@@ -44,7 +42,7 @@ export class EventController {
     )
     coverImage: Express.Multer.File,
   ) {
-    const event = await this.eventService.create(createEventDto, coverImage);
+    const event = await this.eventService.create(req.user!.sub,createEventDto, coverImage);
     return res.status(201).json({
       message: 'Event created successfully',
       event,
