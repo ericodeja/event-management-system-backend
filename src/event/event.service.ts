@@ -6,6 +6,7 @@ import { SupabaseService } from 'src/lib/supabase.service';
 import { FilterEvent } from './dto/filter-event-dto';
 import { Prisma } from 'src/generated/prisma/client';
 import { start } from 'repl';
+import { UpdateEventDto } from './dto/update-event.dto';
 
 @Injectable()
 export class EventService {
@@ -155,6 +156,59 @@ export class EventService {
       return event;
     } catch (err) {
       throw new HttpException(err.message, err.code || 500);
+    }
+  }
+
+  async updateEvent(id: string, updateData: UpdateEventDto) {
+    try {
+      const event = await this.prisma.event.update({
+        where: { id },
+        data: updateData,
+      });
+
+      return event;
+    } catch (err) {
+      throw new HttpException(err.message, err.status || 500);
+    }
+  }
+
+  async publishEvent(id: string) {
+    try {
+      const event = await this.prisma.event.update({
+        where: { id },
+        data: {
+          status: 'published',
+        },
+        select: { id: true, status: true },
+      });
+
+      return event;
+    } catch (err) {
+      throw new HttpException(err.message, err.status || 500);
+    }
+  }
+  async cancelEvent(id: string, cancelReason: string) {
+    try {
+      await this.prisma.event.update({
+        where: { id },
+        data: {
+          status: 'cancelled',
+          cancelReason,
+        },
+        select: { id: true, status: true },
+      });
+    } catch (err) {
+      throw new HttpException(err.message, err.status || 500);
+    }
+  }
+
+  async deleteEvent(id: string) {
+    try {
+      await this.prisma.event.delete({
+        where: { id },
+      });
+    } catch (err) {
+      throw new HttpException(err.message, err.status || 500);
     }
   }
 }

@@ -20,12 +20,13 @@ import { CreateEventDto } from './dto/create-event.dto';
 import type { Response, Request } from 'express';
 import { JwtAuthGuard } from 'src/auth/auth.guard';
 import { FilterEvent } from './dto/filter-event-dto';
+import { UpdateEventDto } from './dto/update-event.dto';
 
 @Controller('event')
+@UseGuards(JwtAuthGuard)
 export class EventController {
   constructor(private readonly eventService: EventService) {}
 
-  @UseGuards(JwtAuthGuard)
   @Post()
   @UseInterceptors(FileInterceptor('coverImage'))
   async create(
@@ -60,18 +61,57 @@ export class EventController {
     });
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get()
   async findAll(@Query() filters: FilterEvent) {
     return await this.eventService.findAll(filters);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get(':slug')
   async findBySlug(@Param('slug') eventSlug: string, @Res() res: Response) {
     const event = await this.eventService.findBySlug(eventSlug);
     return res.status(200).json({
       event,
+    });
+  }
+
+  @Get(':id')
+  async updateEvent(
+    @Param('id') id: string,
+    @Body() updateData: UpdateEventDto,
+    @Res() res: Response,
+  ) {
+    const event = await this.eventService.updateEvent(id, updateData);
+    return res.status(200).json({
+      event,
+    });
+  }
+
+  @Get(':id/publish')
+  async publishEvent(@Param('id') id: string, @Res() res: Response) {
+    const event = await this.eventService.publishEvent(id);
+    return res.status(200).json({
+      message: 'Event published successfully',
+      event,
+    });
+  }
+
+  @Get(':id/cancel')
+  async cancelEvent(
+    @Param('id') id: string,
+    @Body() reason: string,
+    @Res() res: Response,
+  ) {
+    await this.eventService.cancelEvent(id, reason);
+    return res.status(200).json({
+      message: 'Event cancelled all attendees will be notified',
+    });
+  }
+
+  @Get(':id')
+  async deleteEvent(@Param('id') id: string, @Res() res: Response) {
+    await this.eventService.deleteEvent(id);
+    return res.status(200).json({
+      message: 'Event successfully deleted',
     });
   }
 }
