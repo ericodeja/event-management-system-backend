@@ -63,65 +63,98 @@ export class EventService {
   }
 
   async findAll(filters: FilterEvent) {
-    const {
-      search,
-      category,
-      city,
-      country,
-      venueType,
-      startDate,
-      endDate,
-      isFeatured,
-      page = 1,
-      limit = 10,
-    } = filters;
+    try {
+      const {
+        search,
+        category,
+        city,
+        country,
+        venueType,
+        startDate,
+        endDate,
+        isFeatured,
+        page = 1,
+        limit = 10,
+      } = filters;
 
-    const where: Prisma.EventWhereInput = {
-      status: 'published',
-      ...(search && {
-        OR: [
-          { title: { contains: search, mode: 'insensitive' } },
-          { description: { contains: search, mode: 'insensitive' } },
-        ],
-      }),
-      ...(city && { city: { contains: city, mode: 'insensitive' } }),
-      ...(country && { country }),
-      ...(venueType && { venueType }),
-      ...(isFeatured !== undefined && { isFeatured }),
-      ...(category && { category: { slug: category } }),
-      ...(startDate && { startTime: { gte: new Date(startDate) } }),
-      ...(endDate && { startTime: { lte: new Date(endDate) } }),
-    };
+      const where: Prisma.EventWhereInput = {
+        status: 'published',
+        ...(search && {
+          OR: [
+            { title: { contains: search, mode: 'insensitive' } },
+            { description: { contains: search, mode: 'insensitive' } },
+          ],
+        }),
+        ...(city && { city: { contains: city, mode: 'insensitive' } }),
+        ...(country && { country }),
+        ...(venueType && { venueType }),
+        ...(isFeatured !== undefined && { isFeatured }),
+        ...(category && { category: { slug: category } }),
+        ...(startDate && { startTime: { gte: new Date(startDate) } }),
+        ...(endDate && { startTime: { lte: new Date(endDate) } }),
+      };
 
-    const [data, total] = await this.prisma.$transaction([
-      this.prisma.event.findMany({
-        where,
-        skip: (page - 1) * limit,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          category: true,
-          organizer: {
-            select: { orgName: true, id: true },
+      const [data, total] = await this.prisma.$transaction([
+        this.prisma.event.findMany({
+          where,
+          skip: (page - 1) * limit,
+          take: limit,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            category: true,
+            organizer: {
+              select: { orgName: true, id: true },
+            },
+            ticketTypes: {
+              select: { price: true },
+              orderBy: { price: 'asc' },
+              take: 1,
+            },
           },
-          ticketTypes: {
-            select: { price: true },
-            orderBy: { price: 'asc' },
-            take: 1,
+        }),
+        this.prisma.event.count({ where }),
+      ]);
+
+      return {
+        data,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        },
+      };
+    } catch (err) {
+      throw new HttpException(err.message, err.code || 500);
+    }
+  }
+
+  async findBySlug(eventSlug: string) {
+    try {
+      const event = await this.prisma.event.findFirst({
+        where: { slug: { contains: eventSlug, mode: 'insensitive' } },
+        include: {
+          ticketTypes: true,
+          category: { select: { name: true } },
+          organizer: {
+            select: {
+              id: true,
+              orgName: true,
+              bio: true,
+              website: true,
+            },
           },
         },
-      }),
-      this.prisma.event.count({ where }),
-    ]);
+      });
+      if (!event) {
+        throw new NotFoundException(
+          `Event with slug - ${eventSlug} doesn't exist`,
+        );
+      }
 
-    return {
-      data,
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
+      return event;
+    } catch (err) {
+      throw new HttpException(err.message, err.code || 500);
+    }
   }
 }

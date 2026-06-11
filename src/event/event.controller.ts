@@ -12,6 +12,7 @@ import {
   FileTypeValidator,
   UseInterceptors,
   UseGuards,
+  Param,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { EventService } from './event.service';
@@ -63,5 +64,14 @@ export class EventController {
   @Get()
   async findAll(@Query() filters: FilterEvent) {
     return await this.eventService.findAll(filters);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':slug')
+  async findBySlug(@Param('slug') eventSlug: string, @Res() res: Response) {
+    const event = await this.eventService.findBySlug(eventSlug);
+    return res.status(200).json({
+      event,
+    });
   }
 }
