@@ -116,6 +116,10 @@ export class EventService {
         this.prisma.event.count({ where }),
       ]);
 
+      if (data.length < 1) {
+        return "Event doesn't exist ";
+      }
+
       return {
         data,
         meta: {
