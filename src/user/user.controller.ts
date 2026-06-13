@@ -16,7 +16,7 @@ import type { Response, Request } from 'express';
 import { UpdateUser } from './dto/updateUser.dto';
 import { UploadedFile } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { JwtAuthGuard } from 'src/auth/auth.guard';
+import { JwtAuthGuard } from 'src/common/guards/auth.guard';
 
 @Controller('users')
 export class UserController {

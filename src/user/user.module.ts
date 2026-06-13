@@ -3,7 +3,6 @@ import { UserService } from './user.service';
 import { UserController } from './user.controller';
 import { PrismaService } from 'src/lib/prisma.service';
 import { SupabaseService } from 'src/lib/supabase.service';
-import { JwtAuthGuard } from 'src/auth/auth.guard';
 import { TokenService } from 'src/lib/token.service';
 
 @Module({

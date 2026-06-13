@@ -3,8 +3,6 @@ import {
   IsString,
   MaxLength,
   MinLength,
-  IsUUID,
-  IsNotEmpty,
 } from 'class-validator';
 
 export class UpdateUser {

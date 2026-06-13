@@ -11,12 +11,14 @@ import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './common/guards/role.guard';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), AuthModule, UserModule, OrganizerModule, EventModule],
-  controllers: [AppController],
-  providers: [
-    AppService,
-    PrismaService,
-    { provide: APP_GUARD, useClass: RolesGuard },
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    AuthModule,
+    UserModule,
+    OrganizerModule,
+    EventModule,
   ],
+  controllers: [AppController],
+  providers: [AppService, PrismaService],
 })
 export class AppModule {}

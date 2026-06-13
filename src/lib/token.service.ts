@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Role } from 'src/generated/prisma/enums';
 import { PrismaService } from './prisma.service';
-import { UserPayload } from 'src/auth/dto/types/payload.type';
+import { UserPayload } from 'src/auth/types/payload.type';
 
 @Injectable()
 export class TokenService {
