@@ -73,4 +73,17 @@ export class AdminService {
       throw new HttpException(err.message, err.status || 500);
     }
   }
+
+  async feature(eventId: string) {
+    try {
+      await this.prisma.event.update({
+        where: { id: eventId },
+        data: {
+          isFeatured: true,
+        },
+      });
+    } catch (err) {
+      throw new HttpException(err.message, err.status || 500);
+    }
+  }
 }

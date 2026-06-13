@@ -39,6 +39,7 @@ export class AdminController {
       message: 'Organizer approved. User has been notified',
     });
   }
+
   @Patch('organizers/:organizerId/reject')
   async rejectOrganizer(
     @Param('organizerId') organizerId: string,
@@ -48,6 +49,14 @@ export class AdminController {
     await this.adminService.rejectOrganizer(organizerId, reason);
     return res.status(200).json({
       message: 'Organizer application rejected. User has been notified.',
+    });
+  }
+
+  @Patch('events/:eventId/feature')
+  async featured(@Param('eventId') eventId: string, @Res() res: Response) {
+    await this.adminService.feature(eventId);
+    return res.status(200).json({
+      message: 'Event marked as featured',
     });
   }
 }
