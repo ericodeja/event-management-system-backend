@@ -13,17 +13,27 @@ import {
   UseInterceptors,
   UseGuards,
   Param,
+  NotFoundException,
+  Patch,
+  Delete,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { EventService } from './event.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import type { Response, Request } from 'express';
-import { JwtAuthGuard } from 'src/auth/auth.guard';
+import { JwtAuthGuard } from 'src/common/guards/auth.guard';
 import { FilterEvent } from './dto/filter-event-dto';
 import { UpdateEventDto } from './dto/update-event.dto';
+import { CreateTicketType } from './dto/create-ticketType.dto';
+import { Roles } from 'src/common/decorators/roles.decorators';
+import { RolesGuard } from 'src/common/guards/role.guard';
+import { OrganizerGuard } from 'src/common/guards/organizer.guard';
+import { UpdateTicketType } from './dto/update-ticketType.dto';
 
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('organizer')
+@UseGuards(OrganizerGuard)
 @Controller('event')
-@UseGuards(JwtAuthGuard)
 export class EventController {
   constructor(private readonly eventService: EventService) {}
 
@@ -50,8 +60,12 @@ export class EventController {
     )
     coverImage: Express.Multer.File,
   ) {
+    const organizerId = req.user?.organizerId;
+    if (!organizerId) {
+      throw new NotFoundException('OrganizerId Missing');
+    }
     const event = await this.eventService.create(
-      req.user!.sub,
+      req.user!.organizerId!,
       createEventDto,
       coverImage,
     );
@@ -74,44 +88,130 @@ export class EventController {
     });
   }
 
-  @Get(':id')
+  @Patch(':eventId')
   async updateEvent(
-    @Param('id') id: string,
+    @Param('eventId') eventId: string,
+    @Req() req: Request,
     @Body() updateData: UpdateEventDto,
     @Res() res: Response,
   ) {
-    const event = await this.eventService.updateEvent(id, updateData);
+    const event = await this.eventService.updateEvent(
+      req.user!.organizerId!,
+      eventId,
+      updateData,
+    );
     return res.status(200).json({
       event,
     });
   }
 
-  @Get(':id/publish')
-  async publishEvent(@Param('id') id: string, @Res() res: Response) {
-    const event = await this.eventService.publishEvent(id);
+  @Patch(':eventId/publish')
+  async publishEvent(
+    @Param('eventId') eventId: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    const event = await this.eventService.publishEvent(
+      req.user!.organizerId!,
+      eventId,
+    );
     return res.status(200).json({
       message: 'Event published successfully',
       event,
     });
   }
 
-  @Get(':id/cancel')
+  @Get(':eventId/cancel')
   async cancelEvent(
-    @Param('id') id: string,
+    @Param('eventId') eventId: string,
+    @Req() req: Request,
     @Body() reason: string,
     @Res() res: Response,
   ) {
-    await this.eventService.cancelEvent(id, reason);
+    await this.eventService.cancelEvent(
+      req.user!.organizerId!,
+      eventId,
+      reason,
+    );
     return res.status(200).json({
       message: 'Event cancelled all attendees will be notified',
     });
   }
 
-  @Get(':id')
-  async deleteEvent(@Param('id') id: string, @Res() res: Response) {
-    await this.eventService.deleteEvent(id);
+  @Get(':eventId')
+  async deleteEvent(
+    @Param('eventId') eventId: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    await this.eventService.deleteEvent(req.user!.organizerId!, eventId);
     return res.status(200).json({
       message: 'Event successfully deleted',
     });
+  }
+
+  //Ticket types
+
+  @Post(':eventId/ticket-types')
+  async createTicketType(
+    @Param('eventId') eventId: string,
+    @Body() createTicketInput: CreateTicketType,
+    @Res() res: Response,
+    @Req() req: Request,
+  ) {
+    const ticketType = await this.eventService.createTicketType(
+      req.user!.organizerId!,
+      eventId,
+      createTicketInput,
+    );
+
+    return res.status(201).json({
+      message: 'TicketType successfully created',
+      ticketType,
+    });
+  }
+
+  @Get(':eventId/ticket-types')
+  async getTicketType(@Param('eventId') eventId: string, @Res() res: Response) {
+    const data = await this.eventService.getTicketType(eventId);
+    return res.status(200).json({
+      data,
+    });
+  }
+
+  @Patch(':eventId/ticket-types/:ticketId')
+  async updateTicketType(
+    @Param() params: string[],
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body() updateTicketTypeInput: UpdateTicketType,
+  ) {
+    await this.eventService.updateTicketType(
+      req.user!.organizerId!,
+      params[0],
+      params[1],
+      updateTicketTypeInput,
+    );
+
+    res.status(200).json({
+      message: 'Ticket type updated successfully',
+    });
+  }
+
+  @Delete(':eventId/ticket-types/:ticketId')
+  async deleteTicketType(
+    @Param() params: string[],
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+      await this.eventService.deleteTicketType(
+        req.user!.organizerId!,
+        params[0],
+        params[1],
+      );
+
+      res.status(200).json({
+        message: 'Ticket type updated successfully',
+      });
   }
 }

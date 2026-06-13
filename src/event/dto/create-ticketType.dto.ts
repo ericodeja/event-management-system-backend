@@ -5,7 +5,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-export class createTicketType {
+export class CreateTicketType {
   @IsString()
   name: string;
 

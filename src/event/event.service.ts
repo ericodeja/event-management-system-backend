@@ -1,12 +1,19 @@
-import { Injectable, HttpException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  HttpException,
+  NotFoundException,
+  UnauthorizedException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { PrismaService } from 'src/lib/prisma.service';
 import slugigfy from 'slugify';
 import { SupabaseService } from 'src/lib/supabase.service';
 import { FilterEvent } from './dto/filter-event-dto';
 import { Prisma } from 'src/generated/prisma/client';
-import { start } from 'repl';
 import { UpdateEventDto } from './dto/update-event.dto';
+import { CreateTicketType } from './dto/create-ticketType.dto';
+import { UpdateTicketType } from './dto/update-ticketType.dto';
 
 @Injectable()
 export class EventService {
@@ -22,21 +29,28 @@ export class EventService {
     });
   };
 
+  private isOrganizerEvent = async (organizerId: string, eventId: string) => {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+    });
+    if (!eventId) {
+      throw new NotFoundException('Event not found');
+    }
+    if (event?.organizerId !== organizerId) {
+      throw new UnauthorizedException(
+        'You are not allowed to access this resource',
+      );
+    }
+
+    return;
+  };
+
   async create(
-    userId: string,
+    organizerId: string,
     createEventDto: CreateEventDto,
     coverImage?: Express.Multer.File,
   ) {
     try {
-      //get the organizerProfile
-      const organizerId = await this.prisma.organizerProfile.findUnique({
-        where: { userId },
-        select: { id: true },
-      });
-
-      if (!organizerId) {
-        throw new NotFoundException("User isn't an organizer");
-      }
       const coverImageUrl = coverImage
         ? await this.supabaseService.uploadFile('covers', coverImage)
         : undefined;
@@ -44,7 +58,7 @@ export class EventService {
       const event = await this.prisma.event.create({
         data: {
           slug: this.createSlug(createEventDto.title),
-          organizerId: organizerId.id,
+          organizerId,
           coverImageUrl,
           ...createEventDto,
         },
@@ -106,11 +120,7 @@ export class EventService {
             organizer: {
               select: { orgName: true, id: true },
             },
-            ticketTypes: {
-              select: { price: true },
-              orderBy: { price: 'asc' },
-              take: 1,
-            },
+            ticketTypes: true,
           },
         }),
         this.prisma.event.count({ where }),
@@ -163,10 +173,16 @@ export class EventService {
     }
   }
 
-  async updateEvent(id: string, updateData: UpdateEventDto) {
+  async updateEvent(
+    organizerId: string,
+    eventId: string,
+    updateData: UpdateEventDto,
+  ) {
     try {
+      await this.isOrganizerEvent(organizerId, eventId);
+
       const event = await this.prisma.event.update({
-        where: { id },
+        where: { id: eventId },
         data: updateData,
       });
 
@@ -176,10 +192,12 @@ export class EventService {
     }
   }
 
-  async publishEvent(id: string) {
+  async publishEvent(organizerId: string, eventId: string) {
     try {
+      await this.isOrganizerEvent(organizerId, eventId);
+
       const event = await this.prisma.event.update({
-        where: { id },
+        where: { id: eventId },
         data: {
           status: 'published',
         },
@@ -191,10 +209,15 @@ export class EventService {
       throw new HttpException(err.message, err.status || 500);
     }
   }
-  async cancelEvent(id: string, cancelReason: string) {
+  async cancelEvent(
+    organizerId: string,
+    eventId: string,
+    cancelReason: string,
+  ) {
     try {
+      await this.isOrganizerEvent(organizerId, eventId);
       await this.prisma.event.update({
-        where: { id },
+        where: { id: eventId },
         data: {
           status: 'cancelled',
           cancelReason,
@@ -206,10 +229,106 @@ export class EventService {
     }
   }
 
-  async deleteEvent(id: string) {
+  async deleteEvent(organizerId: string, eventId: string) {
     try {
+      await this.isOrganizerEvent(organizerId, eventId);
       await this.prisma.event.delete({
-        where: { id },
+        where: { id: eventId },
+      });
+    } catch (err) {
+      throw new HttpException(err.message, err.status || 500);
+    }
+  }
+
+  async createTicketType(
+    organizerId: string,
+    eventId: string,
+    createEventInput: CreateTicketType,
+  ) {
+    try {
+      await this.isOrganizerEvent(organizerId, eventId);
+      const ticketType = await this.prisma.ticketType.create({
+        data: { eventId, ...createEventInput },
+        omit: { createdAt: true, updatedAt: true, quantitySold: true },
+      });
+
+      return ticketType;
+    } catch (err) {
+      throw new HttpException(err.message, err.code || 500);
+    }
+  }
+
+  async getTicketType(eventId: string) {
+    try {
+      const result = await this.prisma.ticketType.findMany({
+        where: { eventId },
+      });
+
+      if (result.length < 1) {
+        return 'This event has no saved TicketTypes';
+      }
+
+      return result;
+    } catch (err) {
+      throw new HttpException(err.message, err.code || 500);
+    }
+  }
+
+  async updateTicketType(
+    organizerId: string,
+    eventId: string,
+    ticketId: string,
+    updateTicketTypeInput: UpdateTicketType,
+  ) {
+    try {
+      await this.isOrganizerEvent(organizerId, eventId);
+      const ticketType = await this.prisma.ticketType.findUnique({
+        where: { id: ticketId },
+      });
+
+      if (!ticketType) {
+        throw new NotFoundException('Ticket type not found');
+      }
+
+      if (ticketType.eventId !== eventId) {
+        throw new ForbiddenException(
+          'Ticket type does not belong to this event',
+        );
+      }
+
+      await this.prisma.ticketType.update({
+        where: { id: ticketId },
+        data: updateTicketTypeInput,
+      });
+    } catch (err) {
+      throw new HttpException(err.message, err.status || 500);
+    }
+  }
+
+  async deleteTicketType(
+    organizerId: string,
+    eventId: string,
+    ticketId: string,
+  ) {
+    try {
+      await this.isOrganizerEvent(organizerId, eventId);
+
+      const ticketType = await this.prisma.ticketType.findUnique({
+        where: { id: ticketId },
+      });
+
+      if (!ticketType) {
+        throw new NotFoundException('Ticket type not found');
+      }
+
+      if (ticketType.eventId !== eventId) {
+        throw new ForbiddenException(
+          'Ticket type does not belong to this event',
+        );
+      }
+
+      await this.prisma.ticketType.delete({
+        where: { id: ticketId },
       });
     } catch (err) {
       throw new HttpException(err.message, err.status || 500);
