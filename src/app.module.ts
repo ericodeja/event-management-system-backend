@@ -10,6 +10,7 @@ import { EventModule } from './event/event.module';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './common/guards/role.guard';
 import { AdminModule } from './admin/admin.module';
+import { TransactionModule } from './transaction/transaction.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AdminModule } from './admin/admin.module';
     OrganizerModule,
     EventModule,
     AdminModule,
+    TransactionModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
