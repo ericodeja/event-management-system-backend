@@ -59,4 +59,11 @@ export class AdminController {
       message: 'Event marked as featured',
     });
   }
+  @Patch('events/:eventId/suspend')
+  async suspendEvent(@Param('eventId') eventId: string, @Res() res: Response) {
+    await this.adminService.suspendEvent(eventId);
+    return res.status(200).json({
+      message: 'Event suspended',
+    });
+  }
 }

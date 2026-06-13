@@ -86,4 +86,17 @@ export class AdminService {
       throw new HttpException(err.message, err.status || 500);
     }
   }
+
+  async suspendEvent(eventId: string) {
+    try {
+      await this.prisma.event.update({
+        where: { id: eventId },
+        data: {
+          status: 'suspended',
+        },
+      });
+    } catch (err) {
+      throw new HttpException(err.message, err.status || 500);
+    }
+  }
 }
