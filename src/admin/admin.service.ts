@@ -1,4 +1,49 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
+import { PrismaService } from 'src/lib/prisma.service';
+import { FilterUser } from './dto/filterUser.dto';
+import { UserWhereInput } from 'src/generated/prisma/models';
 
 @Injectable()
-export class AdminService {}
+export class AdminService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async getUsers(filters: FilterUser) {
+    try {
+      const { search, role, page = 1, limit = 10 } = filters;
+
+      const where: UserWhereInput = {
+        ...(search && {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            { email: { contains: search, mode: 'insensitive' } },
+          ],
+        }),
+        ...(role && { role }),
+      };
+
+      const [data, total] = await this.prisma.$transaction([
+        this.prisma.user.findMany({
+          where,
+          skip: (page - 1) * limit,
+          take: limit,
+          include: {
+            organizerProfile: true,
+          },
+        }),
+
+        this.prisma.user.count({ where }),
+      ]);
+      return {
+        data,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        },
+      };
+    } catch (err) {
+      throw new HttpException(err.message, err.status || 500);
+    }
+  }
+}
