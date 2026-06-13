@@ -46,4 +46,31 @@ export class AdminService {
       throw new HttpException(err.message, err.status || 500);
     }
   }
+
+  async approveOrganizer(organizerId: string) {
+    try {
+      await this.prisma.organizerProfile.update({
+        where: { id: organizerId },
+        data: {
+          status: 'approved',
+        },
+      });
+    } catch (err) {
+      throw new HttpException(err.message, err.status || 500);
+    }
+  }
+
+  async rejectOrganizer(organizerId: string, reason: string) {
+    try {
+      await this.prisma.organizerProfile.update({
+        where: { id: organizerId },
+        data: {
+          status: 'rejected',
+          rejectedReason: reason,
+        },
+      });
+    } catch (err) {
+      throw new HttpException(err.message, err.status || 500);
+    }
+  }
 }
