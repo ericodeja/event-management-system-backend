@@ -13,8 +13,8 @@ export class TokenService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async getAccessToken(userId: string, role: Role, username: string) {
-    const payload = { sub: userId, username, role };
+  async getAccessToken(userId: string, email: string, role: Role, username: string) {
+    const payload: UserPayload = { sub: userId,email, username, role };
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('ACCESS_TOKEN_SECRET'),
       expiresIn: '15m',
@@ -23,8 +23,8 @@ export class TokenService {
     return accessToken;
   }
 
-  async getRefreshToken(userId: string, role: Role, username: string) {
-    const payload: UserPayload = { sub: userId, username, role };
+  async getRefreshToken(userId: string,email: string, role: Role, username: string) {
+    const payload: UserPayload = { sub: userId,email, username, role };
 
     await this.prisma.refreshToken.deleteMany({
       where: { userId },

@@ -81,11 +81,13 @@ export class AuthService {
 
       const accessToken = await this.tokenService.getAccessToken(
         user.id,
+        user.email,
         user.role,
         user.name,
       );
       const refreshToken = await this.tokenService.getRefreshToken(
         user.id,
+        user.email,
         user.role,
         user.name,
       );
@@ -140,11 +142,13 @@ export class AuthService {
 
       const newAccessToken = await this.tokenService.getAccessToken(
         payload.sub,
+        payload.email,
         payload.role,
         payload.username,
       );
       const newRefreshToken = await this.tokenService.getRefreshToken(
         payload.sub,
+        payload.email,
         payload.role,
         payload.username,
       );
