@@ -7,10 +7,8 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { OrganizerModule } from './organizer/organizer.module';
 import { EventModule } from './event/event.module';
-import { APP_GUARD } from '@nestjs/core';
-import { RolesGuard } from './common/guards/role.guard';
 import { AdminModule } from './admin/admin.module';
-import { PaymentModule } from './payment/payment.module';
+import { OrderModule } from './order/order.module';
 
 @Module({
   imports: [
@@ -20,7 +18,7 @@ import { PaymentModule } from './payment/payment.module';
     OrganizerModule,
     EventModule,
     AdminModule,
-    PaymentModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
