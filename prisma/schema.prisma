@@ -221,7 +221,6 @@ model PromoCode {
 model Order {
   id               String        @id @default(uuid()) @db.Uuid
   userId           String        @db.Uuid
-  orderItemId      String[]      @db.Uuid
   promoCodeId      String?       @db.Uuid
   totalAmount      Int
   currency         String        @default("NGN") @db.VarChar(10)
@@ -232,11 +231,11 @@ model Order {
   updatedAt        DateTime      @updatedAt
 
   // relations
-  user      User       @relation(fields: [userId], references: [id])
-  promoCode PromoCode? @relation(fields: [promoCodeId], references: [id])
-  orderItem OrderItem  @relation(fields: [orderItemId], references: [id])
-  event     Event?     @relation(fields: [eventId], references: [id])
-  eventId   String?    @db.Uuid
+  user       User        @relation(fields: [userId], references: [id])
+  promoCode  PromoCode?  @relation(fields: [promoCodeId], references: [id])
+  orderItems OrderItem[]
+  event      Event?      @relation(fields: [eventId], references: [id])
+  eventId    String?     @db.Uuid
 
   @@map("orders")
 }
@@ -244,16 +243,16 @@ model Order {
 model OrderItem {
   id           String  @id @default(uuid()) @db.Uuid
   userId       String  @db.Uuid
+  orderId      String? @db.Uuid
   eventId      String  @db.Uuid
   ticketTypeId String  @db.Uuid
-  orderId      String? @db.Uuid
   quantity     Int
   unitPrice    Int
   subtotal     Int
 
   // relations
   event      Event      @relation(fields: [eventId], references: [id])
-  orders     Order[]
+  order      Order?     @relation(fields: [orderId], references: [id])
   ticketType TicketType @relation(fields: [ticketTypeId], references: [id])
   tickets    Ticket[]
 
