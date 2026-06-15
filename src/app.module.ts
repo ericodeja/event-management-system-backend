@@ -10,6 +10,7 @@ import { EventModule } from './event/event.module';
 import { AdminModule } from './admin/admin.module';
 import { OrderModule } from './order/order.module';
 import { TicketModule } from './ticket/ticket.module';
+import { CheckinModule } from './checkin/checkin.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { TicketModule } from './ticket/ticket.module';
     AdminModule,
     OrderModule,
     TicketModule,
+    CheckinModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
