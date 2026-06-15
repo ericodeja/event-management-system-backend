@@ -206,6 +206,7 @@ export class OrderService {
 
   async handleWebhook(req: RawBodyRequest<Request>) {
     try {
+      console.log('called')
       const signature = req.headers['x-paystack-signature'] as string;
       const hash = crypto
         .createHmac('sha512', this.config.get<string>('PAYSTACK_SECRET_KEY')!)
@@ -257,6 +258,7 @@ export class OrderService {
             data: {
               orderItemId: item.id,
               eventId: item.eventId,
+              ticketTypeId: item.ticketTypeId,
               ticketCode,
               qrCodeUrl: await QRCode.toDataURL(ticketCode),
               attendeeName: order.user.name,
