@@ -15,6 +15,7 @@ import * as crypto from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import type { RawBodyRequest } from '@nestjs/common';
 import type { Request } from 'express';
+import * as QRCode from 'qrcode';
 
 @Injectable()
 export class OrderService {
@@ -250,10 +251,13 @@ export class OrderService {
 
       for (const item of order.orderItems) {
         for (let i = 0; i < item.quantity; i++) {
+          const ticketCode = `EVT-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+
           await this.prisma.ticket.create({
             data: {
               orderItemId: item.id,
-              ticketCode: `EVT-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+              ticketCode,
+              qrCodeUrl: await QRCode.toDataURL(ticketCode),
               attendeeName: order.user.name,
               attendeeEmail: order.user.email,
             },
