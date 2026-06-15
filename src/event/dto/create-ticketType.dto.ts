@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import {
   IsBoolean,
   IsDateString,
@@ -13,6 +14,7 @@ export class CreateTicketType {
   @IsOptional()
   description?: string;
 
+  @Type(() => Number)
   @IsInt()
   price: number;
 
@@ -20,6 +22,7 @@ export class CreateTicketType {
   @IsOptional()
   currency?: string;
 
+  @Type(() => Number)
   @IsInt()
   quantityAvailable: number;
 
@@ -28,7 +31,7 @@ export class CreateTicketType {
 
   @IsDateString()
   saleEnd: Date;
-  
+
   @IsBoolean()
   @IsOptional()
   isVisible?: boolean;

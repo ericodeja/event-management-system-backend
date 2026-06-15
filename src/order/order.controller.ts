@@ -16,22 +16,26 @@ import type { Request, Response } from 'express';
 import { OrderInput } from './dto/orderInput.dto';
 import { PaymentStatus } from 'src/generated/prisma/enums';
 import type { RawBodyRequest } from '@nestjs/common';
+import { Public } from 'src/common/decorators/public.decorators';
 
 @UseGuards(JwtAuthGuard)
 @Controller('order')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
-  @Post()
+  @Post('addToCart')
   async createOrderItem(
     @Body() itemInput: OrderItemInput,
     @Req() req: Request,
     @Res() res: Response,
   ) {
     await this.orderService.createOrderItem(req.user?.sub!, itemInput);
+    return res.status(200).json({
+      message: 'Item successfully added to cart',
+    });
   }
 
-  @Post()
+  @Post('checkout')
   async create(
     @Body() orderInput: OrderInput,
     @Req() req: Request,
@@ -69,8 +73,9 @@ export class OrderController {
     return res.status(200).json({ order });
   }
 
+  @Public()
   @Post('/webhook/paystack')
   async handleWebhook(@Req() req: RawBodyRequest<Request>) {
-    await this.orderService.handleWebhook(req)
+    await this.orderService.handleWebhook(req);
   }
 }

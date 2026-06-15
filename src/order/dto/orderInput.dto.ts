@@ -1,8 +1,7 @@
+import { Type } from 'class-transformer';
 import { IsArray, IsOptional, IsString, IsUrl } from 'class-validator';
 
 export class OrderInput {
-
-
   @IsString()
   @IsOptional()
   promoCodeId?: string;
@@ -11,6 +10,7 @@ export class OrderInput {
   @IsOptional()
   currency? = 'NGN';
 
+  @Type(() => Array)
   @IsArray()
-  orderItemIds: []
+  orderItemIds: [];
 }

@@ -8,7 +8,7 @@ import {
 import { PrismaService } from 'src/lib/prisma.service';
 import { OrderItemInput } from './dto/orderItemInput.dto';
 import { OrderInput } from './dto/orderInput.dto';
-import { PaymentService } from 'src/lib/payment.service';
+import { PaystackService } from 'src/lib/paystack.service';
 import { OrderWhereInput } from 'src/generated/prisma/models';
 import { PaymentStatus } from 'src/generated/prisma/enums';
 import * as crypto from 'crypto';
@@ -20,7 +20,7 @@ import type { Request } from 'express';
 export class OrderService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly paymentService: PaymentService,
+    private readonly paystackService: PaystackService,
     private readonly config: ConfigService,
   ) {}
 
@@ -94,7 +94,7 @@ export class OrderService {
 
       const totalAmount = itemSubtotal.reduce((acc, curr) => acc + curr, 0);
 
-      const data = await this.paymentService.initializeTransaction(
+      const paystackData = await this.paystackService.initializeTransaction(
         email,
         totalAmount * 100,
       );
@@ -102,11 +102,10 @@ export class OrderService {
       const order = await this.prisma.order.create({
         data: {
           userId,
-          orderItemId: orderItemIds,
           promoCodeId,
           totalAmount,
           currency,
-          paymentReference: data.reference,
+          paymentReference: paystackData.data.reference,
           paymentProvider: 'paystack',
         },
       });
@@ -131,8 +130,8 @@ export class OrderService {
         orderId: order.id,
         totalAmount: order.totalAmount,
         currency,
-        paymentReference: data.reference,
-        paymentUrl: data.authorization_url,
+        paymentReference: paystackData.data.reference,
+        paymentUrl: paystackData.data.authorization_url,
       };
     } catch (err) {
       throw new HttpException(err.message, err.status || 500);
@@ -144,7 +143,7 @@ export class OrderService {
       const order = await this.prisma.order.findUnique({
         where: { id: orderId },
         include: {
-          orderItem: {
+          orderItems: {
             select: {
               ticketType: {
                 select: {
@@ -235,6 +234,52 @@ export class OrderService {
     }
   }
 
-  private async handlePaymentSuccess(data: any) {}
-  private async handlePaymentFailure(data: any) {}
+  private async handlePaymentSuccess(data: any) {
+    try {
+      const { reference } = data;
+      const order = await this.prisma.order.update({
+        where: { paymentReference: reference },
+        data: { paymentStatus: 'paid' },
+        include: {
+          orderItems: true,
+          user: { select: { email: true, name: true } },
+        },
+      });
+
+      if (!order) return;
+
+      for (const item of order.orderItems) {
+        for (let i = 0; i < item.quantity; i++) {
+          await this.prisma.ticket.create({
+            data: {
+              orderItemId: item.id,
+              ticketCode: `EVT-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+              attendeeName: order.user.name,
+              attendeeEmail: order.user.email,
+            },
+          });
+        }
+
+        await this.prisma.ticketType.update({
+          where: { id: item.ticketTypeId },
+          data: {
+            quantitySold: { increment: item.quantity },
+            quantityAvailable: { decrement: item.quantity },
+          },
+        });
+      }
+    } catch (err) {
+      console.error(err.message);
+    }
+  }
+  private async handlePaymentFailure(data: any) {
+    try {
+      await this.prisma.order.update({
+        where: { paymentReference: data.reference },
+        data: { paymentStatus: 'failed' },
+      });
+    } catch (err) {
+      console.error(err.message);
+    }
+  }
 }

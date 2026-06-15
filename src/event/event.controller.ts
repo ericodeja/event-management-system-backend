@@ -32,7 +32,6 @@ import { UpdateTicketType } from './dto/update-ticketType.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('organizer')
-@UseGuards(OrganizerGuard)
 @Controller('event')
 export class EventController {
   constructor(private readonly eventService: EventService) {}
@@ -204,14 +203,14 @@ export class EventController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-      await this.eventService.deleteTicketType(
-        req.user!.organizerId!,
-        params[0],
-        params[1],
-      );
+    await this.eventService.deleteTicketType(
+      req.user!.organizerId!,
+      params[0],
+      params[1],
+    );
 
-      res.status(200).json({
-        message: 'Ticket type updated successfully',
-      });
+    res.status(200).json({
+      message: 'Ticket type updated successfully',
+    });
   }
 }
