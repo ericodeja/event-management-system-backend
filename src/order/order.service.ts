@@ -256,6 +256,7 @@ export class OrderService {
           await this.prisma.ticket.create({
             data: {
               orderItemId: item.id,
+              eventId: item.eventId,
               ticketCode,
               qrCodeUrl: await QRCode.toDataURL(ticketCode),
               attendeeName: order.user.name,

@@ -170,6 +170,7 @@ model Event {
   promoCodes  PromoCode[]
   analytics   EventAnalytics[]
   orderItems  OrderItem[]
+  tickets     Ticket[]
 
   @@map("events")
 }
@@ -262,6 +263,7 @@ model OrderItem {
 model Ticket {
   id            String       @id @default(uuid()) @db.Uuid
   orderItemId   String       @db.Uuid
+  eventId       String       @db.Uuid
   ticketCode    String       @unique @db.VarChar(50)
   qrCodeUrl     String?
   attendeeName  String       @db.VarChar(100)
@@ -273,6 +275,7 @@ model Ticket {
 
   // relations
   orderItem   OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  event       Event     @relation(fields: [eventId], references: [id])
   checkedInBy User?     @relation("CheckedInBy", fields: [checkedInById], references: [id])
 
   @@map("tickets")
