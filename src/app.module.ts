@@ -9,6 +9,7 @@ import { OrganizerModule } from './organizer/organizer.module';
 import { EventModule } from './event/event.module';
 import { AdminModule } from './admin/admin.module';
 import { OrderModule } from './order/order.module';
+import { TicketModule } from './ticket/ticket.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { OrderModule } from './order/order.module';
     EventModule,
     AdminModule,
     OrderModule,
+    TicketModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
