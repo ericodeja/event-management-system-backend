@@ -201,7 +201,7 @@ model TicketType {
 model PromoCode {
   id            String       @id @default(uuid()) @db.Uuid
   eventId       String       @db.Uuid
-  code          String       @db.VarChar(50)
+  code          String       @unique @db.VarChar(50)
   discountType  DiscountType
   discountValue Int
   usageLimit    Int

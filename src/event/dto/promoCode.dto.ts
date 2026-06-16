@@ -4,15 +4,12 @@ import {
   IsDataURI,
   IsUppercase,
   IsNotEmpty,
+  IsDateString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { DiscountType } from 'src/generated/prisma/enums';
 
 export class PromoCodeDto {
-  @IsString()
-  @IsNotEmpty()
-  eventId: string;
-
   @IsString()
   @IsUppercase()
   @IsNotEmpty()
@@ -30,11 +27,11 @@ export class PromoCodeDto {
   @IsNotEmpty()
   usageLimit: number;
 
-  @IsDataURI()
+  @IsDateString()
   @IsNotEmpty()
   validFrom: Date;
 
-  @IsDataURI()
+  @IsDateString()
   @IsNotEmpty()
   validUntil: Date;
 }

@@ -16,6 +16,7 @@ import { ConfigService } from '@nestjs/config';
 import type { RawBodyRequest } from '@nestjs/common';
 import type { Request } from 'express';
 import * as QRCode from 'qrcode';
+import { PromoCode } from 'src/generated/prisma/client';
 
 @Injectable()
 export class OrderService {
@@ -75,7 +76,7 @@ export class OrderService {
 
   async createOrder(userId: string, email: string, orderInput: OrderInput) {
     try {
-      const { promoCodeId, orderItemIds, currency } = orderInput;
+      const { discountCode, orderItemIds, currency } = orderInput;
       let itemSubtotal: number[] = [];
 
       for (let i = 0; i < orderItemIds.length; i++) {
@@ -93,7 +94,50 @@ export class OrderService {
         itemSubtotal.push(item.subtotal);
       }
 
-      const totalAmount = itemSubtotal.reduce((acc, curr) => acc + curr, 0);
+      let promoCodeId: string | undefined = undefined;
+      let totalAmount = itemSubtotal.reduce((acc, curr) => acc + curr, 0);
+
+      if (discountCode) {
+        const promoCode = await this.prisma.promoCode.findUnique({
+          where: { code: discountCode },
+        });
+
+        if (!promoCode) {
+          throw new BadRequestException('Invalid Discount Code');
+        }
+        if (!promoCode.isActive) {
+          throw new BadRequestException('This Promo Code is inactive');
+        }
+        if (promoCode.timesUsed > promoCode.usageLimit) {
+          throw new BadRequestException(
+            'Promo code usage limit has been reached',
+          );
+        }
+
+        if (
+          new Date() < promoCode.validFrom ||
+          new Date() > promoCode.validUntil
+        ) {
+          throw new BadRequestException('Invalid or expired Promo Code');
+        }
+
+        switch (promoCode.discountType) {
+          case 'percent':
+            totalAmount =
+              totalAmount - (totalAmount * promoCode.discountValue) / 100;
+
+            break;
+
+          case 'flat':
+            totalAmount -= promoCode.discountValue;
+            break;
+
+          default:
+            break;
+        }
+
+        promoCodeId = promoCode.id;
+      }
 
       const paystackData = await this.paystackService.initializeTransaction(
         email,
@@ -119,9 +163,16 @@ export class OrderService {
               data: { orderId: order.id },
             });
           }
+          await this.prisma.promoCode.update({
+            where: { id: promoCodeId },
+            data: {
+              timesUsed: { increment: 1 },
+              usageLimit: { decrement: 1 },
+            },
+          });
         } catch (err) {
           console.error(
-            'OrderItem.OrderId update failed: ' + err.message,
+            'Background Job failed: ' + err.message,
             err.status,
           );
         }
