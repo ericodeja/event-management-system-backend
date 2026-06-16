@@ -218,9 +218,10 @@ export class EventController {
   @Post(':eventId/promo-codes')
   async createPromoCode(
     @Body() promoCodeInput: PromoCodeDto,
+    @Param('eventId') eventId: string,
     @Res() res: Response,
   ) {
-    const promoCode = await this.eventService.createPromoCode(promoCodeInput);
+    const promoCode = await this.eventService.createPromoCode(eventId, promoCodeInput);
 
     return res.status(200).json({
       promoCode,

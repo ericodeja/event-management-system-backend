@@ -336,10 +336,11 @@ export class EventService {
     }
   }
 
-  async createPromoCode(promoCodeInput: PromoCodeDto) {
+  async createPromoCode(eventId: string, promoCodeInput: PromoCodeDto) {
     try {
       const promoCode = await this.prisma.promoCode.create({
         data: {
+          eventId,
           ...promoCodeInput,
         },
       });
