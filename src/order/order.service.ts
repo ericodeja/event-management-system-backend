@@ -158,6 +158,8 @@ export class OrderService {
         },
       });
 
+      this.logger.log(`Order initialized successfully: ID ${order.id} for user ID ${userId} (Amount: ${totalAmount} ${currency}, Ref: ${order.paymentReference})`);
+
       setImmediate(async () => {
         try {
           for (let i = 0; i < orderItemIds.length; i++) {
@@ -301,7 +303,12 @@ export class OrderService {
         },
       });
 
-      if (!order) return;
+      if (!order) {
+        this.logger.warn(`Payment success received for unknown reference: ${reference}`);
+        return;
+      }
+
+      this.logger.log(`Payment success confirmed: Order ID ${order.id} (Ref: ${reference})`);
 
       for (const item of order.orderItems) {
         for (let i = 0; i < item.quantity; i++) {
@@ -334,10 +341,11 @@ export class OrderService {
   }
   private async handlePaymentFailure(data: any) {
     try {
-      await this.prisma.order.update({
+      const order = await this.prisma.order.update({
         where: { paymentReference: data.reference },
         data: { paymentStatus: 'failed' },
       });
+      this.logger.warn(`Payment failure logged: Order ID ${order.id} (Ref: ${data.reference})`);
     } catch (err) {
       this.logger.error('Payment failure handling failed: ' + err.message, err.stack);
     }

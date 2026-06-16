@@ -1,10 +1,12 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { HttpException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/lib/prisma.service';
 import { FilterUser } from './dto/filterUser.dto';
 import { UserWhereInput } from 'src/generated/prisma/models';
 
 @Injectable()
 export class AdminService {
+  private readonly logger = new Logger(AdminService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async getUsers(filters: FilterUser) {
@@ -55,6 +57,8 @@ export class AdminService {
           status: 'approved',
         },
       });
+
+      this.logger.log(`Organizer profile approved: ID ${organizerId}`);
     } catch (err) {
       throw new HttpException(err.message, err.status || 500);
     }
@@ -69,6 +73,8 @@ export class AdminService {
           rejectedReason: reason,
         },
       });
+
+      this.logger.log(`Organizer profile rejected: ID ${organizerId}. Reason: ${reason}`);
     } catch (err) {
       throw new HttpException(err.message, err.status || 500);
     }
@@ -82,6 +88,8 @@ export class AdminService {
           isFeatured: true,
         },
       });
+
+      this.logger.log(`Event featured: ID ${eventId}`);
     } catch (err) {
       throw new HttpException(err.message, err.status || 500);
     }
@@ -95,6 +103,8 @@ export class AdminService {
           status: 'suspended',
         },
       });
+
+      this.logger.log(`Event suspended: ID ${eventId}`);
     } catch (err) {
       throw new HttpException(err.message, err.status || 500);
     }

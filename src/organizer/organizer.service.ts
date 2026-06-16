@@ -1,4 +1,4 @@
-import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { CreateOrganizerProfile } from './dto/createOrganizerProfile.dto';
 import { PrismaService } from 'src/lib/prisma.service';
 import { UpdateOrganizerProfileDto } from './dto/updateOrganizerProfile.dto';
@@ -7,6 +7,8 @@ import { EventWhereInput } from 'src/generated/prisma/models';
 
 @Injectable()
 export class OrganizerService {
+  private readonly logger = new Logger(OrganizerService.name);
+
   constructor(private readonly prisma: PrismaService) {}
   async apply(
     userId: string,
@@ -20,6 +22,9 @@ export class OrganizerService {
         },
         omit: { rejectedReason: true, userId: true, id: true },
       });
+
+      this.logger.log(`Organizer profile applied: ${createOrganizerProfileDto.orgName} for user: ${userId}`);
+
       return organizer;
     } catch (err) {
       throw new HttpException(err.message, err.status || 500);
@@ -48,6 +53,8 @@ export class OrganizerService {
           rejectedReason: true,
         },
       });
+
+      this.logger.log(`Organizer profile updated: ${updateOrganizerProfileDto.orgName || 'N/A'} for user: ${userId}`);
 
       return organizer;
     } catch (err) {

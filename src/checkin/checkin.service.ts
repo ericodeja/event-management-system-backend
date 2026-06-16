@@ -4,12 +4,15 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
+  Logger,
 } from '@nestjs/common';
 import { ValidateInput } from './dto/validateInput.dto';
 import { PrismaService } from 'src/lib/prisma.service';
 
 @Injectable()
 export class CheckinService {
+  private readonly logger = new Logger(CheckinService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async validate(userId: string, validateInput: ValidateInput) {
@@ -24,10 +27,12 @@ export class CheckinService {
       });
 
       if (!ticket) {
+        this.logger.warn(`Failed check-in: ticket code ${validateInput.ticketCode} not found (User: ${userId})`);
         throw new BadRequestException('Invalid Ticket - Invalid ticketCode');
       }
 
       if (ticket.event.id !== validateInput.eventId) {
+        this.logger.warn(`Failed check-in: ticket ${validateInput.ticketCode} does not belong to event ${validateInput.eventId} `);
         throw new BadRequestException(
           "This ticket doesn't belong to this event",
         );
@@ -38,6 +43,7 @@ export class CheckinService {
         ticket.checkedInAt ||
         ticket.checkedInById
       ) {
+        this.logger.warn(`Failed check-in: ticket ${validateInput.ticketCode} is already used or cancelled (Status: ${ticket.status}) `);
         throw new BadRequestException(
           'Invalid Ticket - This ticket has been used or cancelled ',
         );
@@ -55,6 +61,8 @@ export class CheckinService {
           },
         });
       });
+      this.logger.log(`Ticket ${ticket.ticketCode} checked in successfully for event ID: ${validateInput.eventId} by user ID: ${userId}`);
+
       return {
         valid: true,
         message: 'Check-in successful',

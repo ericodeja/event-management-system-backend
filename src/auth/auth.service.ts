@@ -5,6 +5,7 @@ import {
   NotFoundException,
   UnauthorizedException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { CreateUser } from './dto/createUser.dto';
 import { LoginUser } from './dto/loginUser.dto';
@@ -15,6 +16,8 @@ import { TokenService } from 'src/lib/token.service';
 import { RefreshTokenDto } from './dto/refreshToken.dto';
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly tokenService: TokenService,
@@ -39,6 +42,8 @@ export class AuthService {
           passwordHash: hashedPassword,
         },
       });
+
+      this.logger.log(`User created successfully: ${user.email} (ID: ${user.id})`);
 
       return {
         id: user.id,
@@ -67,6 +72,7 @@ export class AuthService {
       });
 
       if (!user) {
+        this.logger.warn(`Login failed: User with email ${loginData.email} not found`);
         throw new NotFoundException("User doesn't exist");
       }
 
@@ -76,6 +82,7 @@ export class AuthService {
       );
 
       if (!isVerified) {
+        this.logger.warn(`Login failed: Invalid credentials for user ${loginData.email}`);
         throw new UnauthorizedException('Invalid credentials');
       }
 
@@ -91,6 +98,8 @@ export class AuthService {
         user.role,
         user.name,
       );
+
+      this.logger.log(`User logged in successfully: ${user.email} (ID: ${user.id})`);
 
       return {
         accessToken,
@@ -109,9 +118,11 @@ export class AuthService {
 
   async logOut(userId: string) {
     try {
-      return await this.prisma.refreshToken.deleteMany({
+      const result = await this.prisma.refreshToken.deleteMany({
         where: { userId },
       });
+      this.logger.log(`User logged out successfully (ID: ${userId})`);
+      return result;
     } catch (error) {
       throw new HttpException(error.message, error.status || 500);
     }
@@ -152,6 +163,8 @@ export class AuthService {
         payload.role,
         payload.username,
       );
+
+      this.logger.log(`Token refreshed successfully for user ID: ${payload.sub}`);
 
       return { newAccessToken, newRefreshToken };
     } catch (error) {

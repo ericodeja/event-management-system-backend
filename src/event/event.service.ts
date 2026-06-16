@@ -4,6 +4,7 @@ import {
   NotFoundException,
   UnauthorizedException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { PrismaService } from 'src/lib/prisma.service';
@@ -18,6 +19,8 @@ import { PromoCodeDto } from './dto/promoCode.dto';
 
 @Injectable()
 export class EventService {
+  private readonly logger = new Logger(EventService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly supabaseService: SupabaseService,
@@ -64,6 +67,8 @@ export class EventService {
           ...createEventDto,
         },
       });
+
+      this.logger.log(`Event created: ${event.title} (ID: ${event.id}) by organizer ${organizerId}`);
 
       return {
         id: event.id,
@@ -187,6 +192,8 @@ export class EventService {
         data: updateData,
       });
 
+      this.logger.log(`Event updated: ID ${eventId} by organizer ${organizerId}`);
+
       return event;
     } catch (err) {
       throw new HttpException(err.message, err.status || 500);
@@ -204,6 +211,8 @@ export class EventService {
         },
         select: { id: true, status: true },
       });
+
+      this.logger.log(`Event published: ID ${eventId} by organizer ${organizerId}`);
 
       return event;
     } catch (err) {
@@ -225,6 +234,8 @@ export class EventService {
         },
         select: { id: true, status: true },
       });
+
+      this.logger.log(`Event cancelled: ID ${eventId} by organizer ${organizerId}. Reason: ${cancelReason}`);
     } catch (err) {
       throw new HttpException(err.message, err.status || 500);
     }
@@ -236,6 +247,8 @@ export class EventService {
       await this.prisma.event.delete({
         where: { id: eventId },
       });
+
+      this.logger.log(`Event deleted: ID ${eventId} by organizer ${organizerId}`);
     } catch (err) {
       throw new HttpException(err.message, err.status || 500);
     }
@@ -344,6 +357,8 @@ export class EventService {
           ...promoCodeInput,
         },
       });
+
+      this.logger.log(`Promo code created: ${promoCodeInput.code} (Value: ${promoCodeInput.discountValue} ${promoCodeInput.discountType}) for event ID: ${eventId}`);
 
       return {
         message: 'Promo code created successfully.',
