@@ -14,6 +14,7 @@ import { Prisma } from 'src/generated/prisma/client';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { CreateTicketType } from './dto/create-ticketType.dto';
 import { UpdateTicketType } from './dto/update-ticketType.dto';
+import { PromoCodeDto } from './dto/promoCode.dto';
 
 @Injectable()
 export class EventService {
@@ -330,6 +331,30 @@ export class EventService {
       await this.prisma.ticketType.delete({
         where: { id: ticketId },
       });
+    } catch (err) {
+      throw new HttpException(err.message, err.status || 500);
+    }
+  }
+
+  async createPromoCode(promoCodeInput: PromoCodeDto) {
+    try {
+      const promoCode = await this.prisma.promoCode.create({
+        data: {
+          ...promoCodeInput,
+        },
+      });
+
+      return {
+        message: 'Promo code created successfully.',
+        promoCode: {
+          id: promoCode.id,
+          code: promoCode.code,
+          discountType: promoCode.discountType,
+          discountValue: promoCode.discountValue,
+          usageLimit: promoCode.usageLimit,
+          timesUsed: 0,
+        },
+      };
     } catch (err) {
       throw new HttpException(err.message, err.status || 500);
     }

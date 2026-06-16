@@ -29,6 +29,7 @@ import { Roles } from 'src/common/decorators/roles.decorators';
 import { RolesGuard } from 'src/common/guards/role.guard';
 import { OrganizerGuard } from 'src/common/guards/organizer.guard';
 import { UpdateTicketType } from './dto/update-ticketType.dto';
+import { PromoCodeDto } from './dto/promoCode.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('organizer')
@@ -211,6 +212,18 @@ export class EventController {
 
     res.status(200).json({
       message: 'Ticket type updated successfully',
+    });
+  }
+
+  @Post(':eventId/promo-codes')
+  async createPromoCode(
+    @Body() promoCodeInput: PromoCodeDto,
+    @Res() res: Response,
+  ) {
+    const promoCode = await this.eventService.createPromoCode(promoCodeInput);
+
+    return res.status(200).json({
+      promoCode,
     });
   }
 }
