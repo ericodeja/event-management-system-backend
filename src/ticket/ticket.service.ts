@@ -1,8 +1,14 @@
-import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  NotFoundException,
+  Logger,
+} from '@nestjs/common';
 import { PrismaService } from '../lib/prisma.service';
 
 @Injectable()
 export class TicketService {
+  private readonly logger = new Logger(TicketService.name);
   constructor(private readonly prisma: PrismaService) {}
 
   async findByCode(ticketCode: string) {
@@ -29,6 +35,7 @@ export class TicketService {
 
       return ticket;
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.status || 500);
     }
   }

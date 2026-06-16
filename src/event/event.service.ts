@@ -68,7 +68,9 @@ export class EventService {
         },
       });
 
-      this.logger.log(`Event created: ${event.title} (ID: ${event.id}) by organizer ${organizerId}`);
+      this.logger.log(
+        `Event created: ${event.title} (ID: ${event.id}) by organizer ${organizerId}`,
+      );
 
       return {
         id: event.id,
@@ -79,6 +81,7 @@ export class EventService {
         createdAt: event.createdAt,
       };
     } catch (error) {
+      this.logger.error(error.message, error.stack);
       throw new HttpException(error.message, error.status || 500);
     }
   }
@@ -146,6 +149,7 @@ export class EventService {
         },
       };
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.code || 500);
     }
   }
@@ -175,6 +179,7 @@ export class EventService {
 
       return event;
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.code || 500);
     }
   }
@@ -192,10 +197,13 @@ export class EventService {
         data: updateData,
       });
 
-      this.logger.log(`Event updated: ID ${eventId} by organizer ${organizerId}`);
+      this.logger.log(
+        `Event updated: ID ${eventId} by organizer ${organizerId}`,
+      );
 
       return event;
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.status || 500);
     }
   }
@@ -212,10 +220,13 @@ export class EventService {
         select: { id: true, status: true },
       });
 
-      this.logger.log(`Event published: ID ${eventId} by organizer ${organizerId}`);
+      this.logger.log(
+        `Event published: ID ${eventId} by organizer ${organizerId}`,
+      );
 
       return event;
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.status || 500);
     }
   }
@@ -235,8 +246,11 @@ export class EventService {
         select: { id: true, status: true },
       });
 
-      this.logger.log(`Event cancelled: ID ${eventId} by organizer ${organizerId}. Reason: ${cancelReason}`);
+      this.logger.log(
+        `Event cancelled: ID ${eventId} by organizer ${organizerId}. Reason: ${cancelReason}`,
+      );
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.status || 500);
     }
   }
@@ -248,8 +262,11 @@ export class EventService {
         where: { id: eventId },
       });
 
-      this.logger.log(`Event deleted: ID ${eventId} by organizer ${organizerId}`);
+      this.logger.log(
+        `Event deleted: ID ${eventId} by organizer ${organizerId}`,
+      );
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.status || 500);
     }
   }
@@ -268,6 +285,7 @@ export class EventService {
 
       return ticketType;
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.code || 500);
     }
   }
@@ -284,6 +302,7 @@ export class EventService {
 
       return result;
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.code || 500);
     }
   }
@@ -315,6 +334,7 @@ export class EventService {
         data: updateTicketTypeInput,
       });
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.status || 500);
     }
   }
@@ -345,6 +365,7 @@ export class EventService {
         where: { id: ticketId },
       });
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.status || 500);
     }
   }
@@ -358,7 +379,9 @@ export class EventService {
         },
       });
 
-      this.logger.log(`Promo code created: ${promoCodeInput.code} (Value: ${promoCodeInput.discountValue} ${promoCodeInput.discountType}) for event ID: ${eventId}`);
+      this.logger.log(
+        `Promo code created: ${promoCodeInput.code} (Value: ${promoCodeInput.discountValue} ${promoCodeInput.discountType}) for event ID: ${eventId}`,
+      );
 
       return {
         message: 'Promo code created successfully.',
@@ -372,6 +395,7 @@ export class EventService {
         },
       };
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.status || 500);
     }
   }

@@ -24,12 +24,16 @@ export class AuthService {
   ) {}
 
   async createUser(userData: CreateUser) {
-    const ifuserExit = await this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: {
         email: userData.email,
       },
+      select: { email: true },
     });
-    if (ifuserExit) {
+    if (user) {
+      this.logger.warn(
+        `Registration attempt with existing email: ${user.email}`,
+      );
       throw new ConflictException('User already exists');
     }
 
@@ -43,7 +47,9 @@ export class AuthService {
         },
       });
 
-      this.logger.log(`User created successfully: ${user.email} (ID: ${user.id})`);
+      this.logger.log(
+        `User created successfully: ${user.email} (ID: ${user.id})`,
+      );
 
       return {
         id: user.id,
@@ -54,6 +60,7 @@ export class AuthService {
         createdAt: user.createdAt,
       };
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException('User creation failed' + err.message, 500);
     }
   }
@@ -72,7 +79,9 @@ export class AuthService {
       });
 
       if (!user) {
-        this.logger.warn(`Login failed: User with email ${loginData.email} not found`);
+        this.logger.warn(
+          `Login failed: User with email ${loginData.email} not found`,
+        );
         throw new NotFoundException("User doesn't exist");
       }
 
@@ -82,7 +91,9 @@ export class AuthService {
       );
 
       if (!isVerified) {
-        this.logger.warn(`Login failed: Invalid credentials for user ${loginData.email}`);
+        this.logger.warn(
+          `Login failed: Invalid credentials for user ${loginData.email}`,
+        );
         throw new UnauthorizedException('Invalid credentials');
       }
 
@@ -99,7 +110,7 @@ export class AuthService {
         user.name,
       );
 
-      this.logger.log(`User logged in successfully: ${user.email} (ID: ${user.id})`);
+      this.logger.log(`User logged in successfully: (ID: ${user.id})`);
 
       return {
         accessToken,
@@ -112,6 +123,7 @@ export class AuthService {
         },
       };
     } catch (error) {
+      this.logger.error(error.message, error.stack);
       throw new HttpException(error.message, error.status || 500);
     }
   }
@@ -124,6 +136,7 @@ export class AuthService {
       this.logger.log(`User logged out successfully (ID: ${userId})`);
       return result;
     } catch (error) {
+      this.logger.error(error.message, error.stack);
       throw new HttpException(error.message, error.status || 500);
     }
   }
@@ -164,10 +177,13 @@ export class AuthService {
         payload.username,
       );
 
-      this.logger.log(`Token refreshed successfully for user ID: ${payload.sub}`);
+      this.logger.log(
+        `Token refreshed successfully for user ID: ${payload.sub}`,
+      );
 
       return { newAccessToken, newRefreshToken };
     } catch (error) {
+      this.logger.error(error.message, error.stack);
       throw new HttpException(error.message, error.status || 500);
     }
   }
@@ -176,6 +192,7 @@ export class AuthService {
     try {
       return await bcrypt.hash(password, 10);
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException('Password hash failed' + err.message, 500);
     }
   }
@@ -183,6 +200,7 @@ export class AuthService {
     try {
       return await bcrypt.compare(plain, hash);
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(
         'Password comparison failed' + err.message,
         err.status,

@@ -45,6 +45,7 @@ export class AdminService {
         },
       };
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.status || 500);
     }
   }
@@ -60,6 +61,7 @@ export class AdminService {
 
       this.logger.log(`Organizer profile approved: ID ${organizerId}`);
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.status || 500);
     }
   }
@@ -74,8 +76,11 @@ export class AdminService {
         },
       });
 
-      this.logger.log(`Organizer profile rejected: ID ${organizerId}. Reason: ${reason}`);
+      this.logger.log(
+        `Organizer profile rejected: ID ${organizerId}. Reason: ${reason}`,
+      );
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.status || 500);
     }
   }
@@ -91,6 +96,7 @@ export class AdminService {
 
       this.logger.log(`Event featured: ID ${eventId}`);
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.status || 500);
     }
   }
@@ -106,6 +112,7 @@ export class AdminService {
 
       this.logger.log(`Event suspended: ID ${eventId}`);
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.status || 500);
     }
   }

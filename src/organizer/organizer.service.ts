@@ -1,4 +1,9 @@
-import { HttpException, Injectable, NotFoundException, Logger } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  NotFoundException,
+  Logger,
+} from '@nestjs/common';
 import { CreateOrganizerProfile } from './dto/createOrganizerProfile.dto';
 import { PrismaService } from '../lib/prisma.service';
 import { UpdateOrganizerProfileDto } from './dto/updateOrganizerProfile.dto';
@@ -23,10 +28,13 @@ export class OrganizerService {
         omit: { rejectedReason: true, userId: true, id: true },
       });
 
-      this.logger.log(`Organizer profile applied: ${createOrganizerProfileDto.orgName} for user: ${userId}`);
+      this.logger.log(
+        `Organizer profile applied: ${createOrganizerProfileDto.orgName} for user: ${userId}`,
+      );
 
       return organizer;
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.status || 500);
     }
   }
@@ -54,10 +62,13 @@ export class OrganizerService {
         },
       });
 
-      this.logger.log(`Organizer profile updated: ${updateOrganizerProfileDto.orgName || 'N/A'} for user: ${userId}`);
+      this.logger.log(
+        `Organizer profile updated: ${updateOrganizerProfileDto.orgName || 'N/A'} for user: ${userId}`,
+      );
 
       return organizer;
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.status || 500);
     }
   }
@@ -120,6 +131,7 @@ export class OrganizerService {
         },
       };
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.code || 500);
     }
   }

@@ -1,4 +1,9 @@
-import { HttpException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { UpdateUser } from '../user/dto/updateUser.dto';
 import { PrismaService } from '../lib/prisma.service';
 import { SupabaseService } from '../lib/supabase.service';
@@ -13,18 +18,23 @@ export class UserService {
   ) {}
 
   async findMe(id: string) {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        id,
-      },
-      omit: {
-        passwordHash: true,
-      },
-    });
-    if (!user) {
-      throw new NotFoundException('User not found');
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: {
+          id,
+        },
+        omit: {
+          passwordHash: true,
+        },
+      });
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      return user;
+    } catch (err) {
+      this.logger.error(err.message, err.stack);
+      throw new HttpException(err.message, err.status || 500);
     }
-    return user;
   }
 
   async updateMe(
@@ -63,12 +73,16 @@ export class UserService {
           this.supabaseService
             .deleteFile(currentUser.avatarUrl!)
             .catch((err) =>
-              this.logger.error('Background avatar delete failed: ' + err.message, err.stack),
+              this.logger.error(
+                'Background avatar delete failed: ' + err.message,
+                err.stack,
+              ),
             );
         });
       }
       return user;
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.status);
     }
   }

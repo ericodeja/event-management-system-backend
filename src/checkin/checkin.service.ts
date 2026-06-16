@@ -74,6 +74,7 @@ export class CheckinService {
         },
       };
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.status || 500);
     }
   }

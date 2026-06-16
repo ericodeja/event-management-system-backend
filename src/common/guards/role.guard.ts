@@ -3,6 +3,7 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { UserPayload } from '../../auth/types/payload.type';
@@ -11,6 +12,7 @@ import { PrismaService } from '../../lib/prisma.service';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
+  private readonly logger = new Logger(RolesGuard.name);
   constructor(
     private readonly reflector: Reflector,
     private readonly prisma: PrismaService,
@@ -29,12 +31,15 @@ export class RolesGuard implements CanActivate {
     const user: UserPayload = request.user!;
 
     if (!requiredRoles.includes(user?.role)) {
+      this.logger.error(
+        `User Authorization failed: ${user.sub} can't access this resource`,
+      );
       throw new ForbiddenException(
         'You do not have permission to access this resource',
       );
     }
 
-    // Assign organizerId to 'organizer' 
+    // Assign organizerId to 'organizer'
     if (requiredRoles.includes('organizer')) {
       const organizer = await this.prisma.organizerProfile.findUnique({
         where: { userId: request.user!.sub },

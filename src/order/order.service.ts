@@ -72,6 +72,7 @@ export class OrderService {
         },
       });
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.status || 500);
     }
   }
@@ -157,7 +158,9 @@ export class OrderService {
         },
       });
 
-      this.logger.log(`Order initialized successfully: ID ${order.id} for user ID ${userId} (Amount: ${totalAmount} ${currency}, Ref: ${order.paymentReference})`);
+      this.logger.log(
+        `Order initialized successfully: ID ${order.id} for user ID ${userId} (Amount: ${totalAmount} ${currency}, Ref: ${order.paymentReference})`,
+      );
 
       setImmediate(async () => {
         try {
@@ -175,10 +178,7 @@ export class OrderService {
             },
           });
         } catch (err) {
-          this.logger.error(
-            'Background Job failed: ' + err.message,
-            err.stack,
-          );
+          this.logger.error('Background Job failed: ' + err.message, err.stack);
         }
       });
 
@@ -190,6 +190,7 @@ export class OrderService {
         paymentUrl: paystackData.data.authorization_url,
       };
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.status || 500);
     }
   }
@@ -221,6 +222,7 @@ export class OrderService {
 
       return order;
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.status || 500);
     }
   }
@@ -255,6 +257,7 @@ export class OrderService {
         },
       };
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.status || 500);
     }
   }
@@ -286,6 +289,7 @@ export class OrderService {
       }
       return { received: true };
     } catch (err) {
+      this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.status || 500);
     }
   }
@@ -303,11 +307,15 @@ export class OrderService {
       });
 
       if (!order) {
-        this.logger.warn(`Payment success received for unknown reference: ${reference}`);
+        this.logger.warn(
+          `Payment success received for unknown reference: ${reference}`,
+        );
         return;
       }
 
-      this.logger.log(`Payment success confirmed: Order ID ${order.id} (Ref: ${reference})`);
+      this.logger.log(
+        `Payment success confirmed: Order ID ${order.id} (Ref: ${reference})`,
+      );
 
       for (const item of order.orderItems) {
         for (let i = 0; i < item.quantity; i++) {
@@ -335,7 +343,10 @@ export class OrderService {
         });
       }
     } catch (err) {
-      this.logger.error('Payment success handling failed: ' + err.message, err.stack);
+      this.logger.error(
+        'Payment success handling failed: ' + err.message,
+        err.stack,
+      );
     }
   }
   private async handlePaymentFailure(data: any) {
@@ -344,9 +355,14 @@ export class OrderService {
         where: { paymentReference: data.reference },
         data: { paymentStatus: 'failed' },
       });
-      this.logger.warn(`Payment failure logged: Order ID ${order.id} (Ref: ${data.reference})`);
+      this.logger.warn(
+        `Payment failure logged: Order ID ${order.id} (Ref: ${data.reference})`,
+      );
     } catch (err) {
-      this.logger.error('Payment failure handling failed: ' + err.message, err.stack);
+      this.logger.error(
+        'Payment failure handling failed: ' + err.message,
+        err.stack,
+      );
     }
   }
 }
