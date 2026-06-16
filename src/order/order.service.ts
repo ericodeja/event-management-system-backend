@@ -4,6 +4,7 @@ import {
   NotFoundException,
   BadRequestException,
   UnauthorizedException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from 'src/lib/prisma.service';
 import { OrderItemInput } from './dto/orderItemInput.dto';
@@ -20,6 +21,8 @@ import { PromoCode } from 'src/generated/prisma/client';
 
 @Injectable()
 export class OrderService {
+  private readonly logger = new Logger(OrderService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly paystackService: PaystackService,
@@ -171,9 +174,9 @@ export class OrderService {
             },
           });
         } catch (err) {
-          console.error(
+          this.logger.error(
             'Background Job failed: ' + err.message,
-            err.status,
+            err.stack,
           );
         }
       });
@@ -326,7 +329,7 @@ export class OrderService {
         });
       }
     } catch (err) {
-      console.error(err.message);
+      this.logger.error('Payment success handling failed: ' + err.message, err.stack);
     }
   }
   private async handlePaymentFailure(data: any) {
@@ -336,7 +339,7 @@ export class OrderService {
         data: { paymentStatus: 'failed' },
       });
     } catch (err) {
-      console.error(err.message);
+      this.logger.error('Payment failure handling failed: ' + err.message, err.stack);
     }
   }
 }

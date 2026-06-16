@@ -1,10 +1,12 @@
-import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { UpdateUser } from 'src/user/dto/updateUser.dto';
 import { PrismaService } from 'src/lib/prisma.service';
 import { SupabaseService } from 'src/lib/supabase.service';
 
 @Injectable()
 export class UserService {
+  private readonly logger = new Logger(UserService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly supabaseService: SupabaseService,
@@ -61,7 +63,7 @@ export class UserService {
           this.supabaseService
             .deleteFile(currentUser.avatarUrl!)
             .catch((err) =>
-              console.error('Background avatar delete failed: ' + err.message),
+              this.logger.error('Background avatar delete failed: ' + err.message, err.stack),
             );
         });
       }
