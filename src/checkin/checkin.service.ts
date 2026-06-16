@@ -12,7 +12,7 @@ import { PrismaService } from 'src/lib/prisma.service';
 export class CheckinService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async validate(validateInput: ValidateInput) {
+  async validate(userId: string, validateInput: ValidateInput) {
     try {
       const ticket = await this.prisma.ticket.findUnique({
         where: { ticketCode: validateInput.ticketCode },
@@ -50,7 +50,7 @@ export class CheckinService {
           where: { ticketCode: ticket.ticketCode },
           data: {
             checkedInAt,
-            checkedInById: ticket.orderItem.userId,
+            checkedInById: userId,
             status: 'used',
           },
         });
