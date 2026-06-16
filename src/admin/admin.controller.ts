@@ -2,16 +2,15 @@ import {
   Controller,
   UseGuards,
   Get,
-  Post,
   Body,
   Res,
   Param,
   Patch,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { JwtAuthGuard } from 'src/common/guards/auth.guard';
-import { RolesGuard } from 'src/common/guards/role.guard';
-import { Roles } from 'src/common/decorators/roles.decorators';
+import { JwtAuthGuard } from '../common/guards/auth.guard';
+import { RolesGuard } from '../common/guards/role.guard';
+import { Roles } from '../common/decorators/roles.decorators';
 import { FilterUser } from './dto/filterUser.dto';
 import type { Response } from 'express';
 

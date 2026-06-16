@@ -9,7 +9,7 @@ import {
   IsUUID,
   IsUrl,
 } from 'class-validator';
-import { EventStatus, VenueType } from 'src/generated/prisma/enums';
+import { EventStatus, VenueType } from '../../generated/prisma/enums';
 import { Type } from 'class-transformer';
 
 export class CreateEventDto {

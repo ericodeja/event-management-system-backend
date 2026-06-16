@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { EventService } from './event.service';
 import { EventController } from './event.controller';
-import { PrismaService } from 'src/lib/prisma.service';
-import { SupabaseService } from 'src/lib/supabase.service';
+import { PrismaService } from '../lib/prisma.service';
+import { SupabaseService } from '../lib/supabase.service';
 import { ConfigService } from '@nestjs/config';
-import { TokenService } from 'src/lib/token.service';
+import { TokenService } from '../lib/token.service';
 
 @Module({
   controllers: [EventController],

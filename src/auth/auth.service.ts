@@ -9,10 +9,10 @@ import {
 } from '@nestjs/common';
 import { CreateUser } from './dto/createUser.dto';
 import { LoginUser } from './dto/loginUser.dto';
-import { PrismaService } from 'src/lib/prisma.service';
+import { PrismaService } from '../lib/prisma.service';
 
 import bcrypt from 'bcrypt';
-import { TokenService } from 'src/lib/token.service';
+import { TokenService } from '../lib/token.service';
 import { RefreshTokenDto } from './dto/refreshToken.dto';
 @Injectable()
 export class AuthService {

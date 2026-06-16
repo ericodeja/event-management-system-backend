@@ -21,13 +21,12 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { EventService } from './event.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import type { Response, Request } from 'express';
-import { JwtAuthGuard } from 'src/common/guards/auth.guard';
+import { JwtAuthGuard } from '../common/guards/auth.guard';
 import { FilterEvent } from './dto/filter-event-dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { CreateTicketType } from './dto/create-ticketType.dto';
-import { Roles } from 'src/common/decorators/roles.decorators';
-import { RolesGuard } from 'src/common/guards/role.guard';
-import { OrganizerGuard } from 'src/common/guards/organizer.guard';
+import { Roles } from '../common/decorators/roles.decorators';
+import { RolesGuard } from '../common/guards/role.guard';
 import { UpdateTicketType } from './dto/update-ticketType.dto';
 import { PromoCodeDto } from './dto/promoCode.dto';
 

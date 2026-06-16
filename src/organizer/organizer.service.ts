@@ -1,9 +1,9 @@
 import { HttpException, Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { CreateOrganizerProfile } from './dto/createOrganizerProfile.dto';
-import { PrismaService } from 'src/lib/prisma.service';
+import { PrismaService } from '../lib/prisma.service';
 import { UpdateOrganizerProfileDto } from './dto/updateOrganizerProfile.dto';
 import { FilterOrganizerEvent } from './dto/filter-organizerEvents.dto';
-import { EventWhereInput } from 'src/generated/prisma/models';
+import { EventWhereInput } from '../generated/prisma/models';
 
 @Injectable()
 export class OrganizerService {

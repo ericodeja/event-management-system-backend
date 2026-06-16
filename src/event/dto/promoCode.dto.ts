@@ -7,7 +7,7 @@ import {
   IsDateString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { DiscountType } from 'src/generated/prisma/enums';
+import { DiscountType } from '../../generated/prisma/enums';
 
 export class PromoCodeDto {
   @IsString()

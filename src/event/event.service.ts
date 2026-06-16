@@ -7,11 +7,11 @@ import {
   Logger,
 } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
-import { PrismaService } from 'src/lib/prisma.service';
+import { PrismaService } from '../lib/prisma.service';
 import slugigfy from 'slugify';
-import { SupabaseService } from 'src/lib/supabase.service';
+import { SupabaseService } from '../lib/supabase.service';
 import { FilterEvent } from './dto/filter-event-dto';
-import { Prisma } from 'src/generated/prisma/client';
+import { Prisma } from '../generated/prisma/client';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { CreateTicketType } from './dto/create-ticketType.dto';
 import { UpdateTicketType } from './dto/update-ticketType.dto';

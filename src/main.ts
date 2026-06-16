@@ -1,13 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { HttpExceptionFilter } from 'src/common/filters/http-exception.filter';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ValidationPipe } from '@nestjs/common';
-import { WinstonLogger } from 'src/lib/winston.service';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     rawBody: true,
-    logger: new WinstonLogger(),
+    bufferLogs: true,
   });
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalPipes(
@@ -17,6 +17,8 @@ async function bootstrap() {
       transform: true,
     }),
   );
+  app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
+
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();

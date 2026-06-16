@@ -13,7 +13,7 @@ import { CreateUser } from './dto/createUser.dto';
 import { LoginUser } from './dto/loginUser.dto';
 import { RefreshTokenDto } from './dto/refreshToken.dto';
 import type { Response, Request } from 'express';
-import { JwtAuthGuard } from 'src/common/guards/auth.guard';
+import { JwtAuthGuard } from '../common/guards/auth.guard';
 
 @Controller('auth')
 export class AuthController {

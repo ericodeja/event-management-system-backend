@@ -7,7 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ValidateInput } from './dto/validateInput.dto';
-import { PrismaService } from 'src/lib/prisma.service';
+import { PrismaService } from '../lib/prisma.service';
 
 @Injectable()
 export class CheckinService {

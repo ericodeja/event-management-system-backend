@@ -10,9 +10,9 @@ import {
 import { CheckinService } from './checkin.service';
 import { ValidateInput } from './dto/validateInput.dto';
 import type { Response, Request } from 'express';
-import { JwtAuthGuard } from 'src/common/guards/auth.guard';
-import { RolesGuard } from 'src/common/guards/role.guard';
-import { Roles } from 'src/common/decorators/roles.decorators';
+import { JwtAuthGuard } from '../common/guards/auth.guard';
+import { RolesGuard } from '../common/guards/role.guard';
+import { Roles } from '../common/decorators/roles.decorators';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin')

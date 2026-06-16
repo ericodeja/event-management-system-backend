@@ -5,9 +5,9 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { UserPayload } from 'src/auth/types/payload.type';
+import { UserPayload } from '../../auth/types/payload.type';
 import type { Request } from 'express';
-import { PrismaService } from 'src/lib/prisma.service';
+import { PrismaService } from '../../lib/prisma.service';
 
 @Injectable()
 export class RolesGuard implements CanActivate {

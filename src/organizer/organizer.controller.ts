@@ -13,11 +13,11 @@ import { OrganizerService } from './organizer.service';
 import { CreateOrganizerProfile } from './dto/createOrganizerProfile.dto';
 import { UpdateOrganizerProfileDto } from './dto/updateOrganizerProfile.dto';
 import type { Request, Response } from 'express';
-import { JwtAuthGuard } from 'src/common/guards/auth.guard';
-import { Roles } from 'src/common/decorators/roles.decorators';
-import { RolesGuard } from 'src/common/guards/role.guard';
+import { JwtAuthGuard } from '../common/guards/auth.guard';
+import { Roles } from '../common/decorators/roles.decorators';
+import { RolesGuard } from '../common/guards/role.guard';
 import { FilterOrganizerEvent } from './dto/filter-organizerEvents.dto';
-import { OrganizerGuard } from 'src/common/guards/organizer.guard';
+import { OrganizerGuard } from '../common/guards/organizer.guard';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('organizer')

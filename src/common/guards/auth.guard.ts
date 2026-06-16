@@ -7,7 +7,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import type { Request } from 'express';
-import { TokenService } from 'src/lib/token.service';
+import { TokenService } from '../../lib/token.service';
 import { Reflector } from '@nestjs/core';
 
 @Injectable()

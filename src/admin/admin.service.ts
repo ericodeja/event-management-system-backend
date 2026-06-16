@@ -1,7 +1,7 @@
 import { HttpException, Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from 'src/lib/prisma.service';
+import { PrismaService } from '../lib/prisma.service';
 import { FilterUser } from './dto/filterUser.dto';
-import { UserWhereInput } from 'src/generated/prisma/models';
+import { UserWhereInput } from '../generated/prisma/models';
 
 @Injectable()
 export class AdminService {

@@ -10,13 +10,13 @@ import {
   Query,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
-import { JwtAuthGuard } from 'src/common/guards/auth.guard';
+import { JwtAuthGuard } from '../common/guards/auth.guard';
 import { OrderItemInput } from './dto/orderItemInput.dto';
 import type { Request, Response } from 'express';
 import { OrderInput } from './dto/orderInput.dto';
-import { PaymentStatus } from 'src/generated/prisma/enums';
+import { PaymentStatus } from '../generated/prisma/enums';
 import type { RawBodyRequest } from '@nestjs/common';
-import { Public } from 'src/common/decorators/public.decorators';
+import { Public } from '../common/decorators/public.decorators';
 
 @UseGuards(JwtAuthGuard)
 @Controller('order')

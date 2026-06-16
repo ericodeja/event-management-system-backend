@@ -1,7 +1,7 @@
 import { HttpException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { UpdateUser } from 'src/user/dto/updateUser.dto';
-import { PrismaService } from 'src/lib/prisma.service';
-import { SupabaseService } from 'src/lib/supabase.service';
+import { UpdateUser } from '../user/dto/updateUser.dto';
+import { PrismaService } from '../lib/prisma.service';
+import { SupabaseService } from '../lib/supabase.service';
 
 @Injectable()
 export class UserService {

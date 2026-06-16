@@ -7,7 +7,7 @@ import {
   IsInt
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { VenueType } from 'src/generated/prisma/enums';
+import { VenueType } from '../../generated/prisma/enums';
 
 export class FilterEvent {
   @IsOptional()

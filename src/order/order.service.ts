@@ -6,18 +6,17 @@ import {
   UnauthorizedException,
   Logger,
 } from '@nestjs/common';
-import { PrismaService } from 'src/lib/prisma.service';
+import { PrismaService } from '../lib/prisma.service';
 import { OrderItemInput } from './dto/orderItemInput.dto';
 import { OrderInput } from './dto/orderInput.dto';
-import { PaystackService } from 'src/lib/paystack.service';
-import { OrderWhereInput } from 'src/generated/prisma/models';
-import { PaymentStatus } from 'src/generated/prisma/enums';
+import { PaystackService } from '../lib/paystack.service';
+import { OrderWhereInput } from '../generated/prisma/models';
+import { PaymentStatus } from '../generated/prisma/enums';
 import * as crypto from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import type { RawBodyRequest } from '@nestjs/common';
 import type { Request } from 'express';
 import * as QRCode from 'qrcode';
-import { PromoCode } from 'src/generated/prisma/client';
 
 @Injectable()
 export class OrderService {

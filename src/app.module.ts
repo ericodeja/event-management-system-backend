@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
@@ -11,10 +11,56 @@ import { AdminModule } from './admin/admin.module';
 import { OrderModule } from './order/order.module';
 import { TicketModule } from './ticket/ticket.module';
 import { CheckinModule } from './checkin/checkin.module';
-import { RequestLoggingMiddleware } from './common/middleware/request-logging.middleware';
+import { WinstonModule } from 'nest-winston';
+import * as winston from 'winston';
+import 'dotenv/config'
+
+const isDev = process.env.NODE_ENV !== 'production';
 
 @Module({
   imports: [
+    WinstonModule.forRoot({
+      transports: [
+        new winston.transports.Console({
+          format: isDev
+            ? winston.format.combine(
+                winston.format.colorize(),
+                winston.format.timestamp({ format: 'HH:mm:ss' }),
+                winston.format.printf(
+                  ({ level, message, timestamp, context, stack }) => {
+                    return `[${timestamp}] ${level} ${context ? '[' + context + ']' : ''}: ${message}${stack ? '\n' + stack : ''}`;
+                  },
+                ),
+              )
+            : winston.format.combine(
+                winston.format.timestamp(),
+                winston.format.json(),
+              ),
+        }),
+
+        // write errors to a file in production
+        ...(!isDev
+          ? [
+              new winston.transports.File({
+                filename: 'logs/error.log',
+                level: 'error',
+                format: winston.format.combine(
+                  winston.format.timestamp(),
+                  winston.format.json(),
+                ),
+              }),
+              new winston.transports.File({
+                filename: 'logs/app.log',
+                level: 'info',
+                format: winston.format.combine(
+                  winston.format.timestamp(),
+                  winston.format.json(),
+                ),
+              }),
+            ]
+          : []),
+      ],
+    }),
     ConfigModule.forRoot({ isGlobal: true }),
     AuthModule,
     UserModule,
@@ -28,8 +74,4 @@ import { RequestLoggingMiddleware } from './common/middleware/request-logging.mi
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(RequestLoggingMiddleware).forRoutes('*');
-  }
-}
+export class AppModule {}
