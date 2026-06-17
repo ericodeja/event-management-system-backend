@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaService } from './lib/prisma.service';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
@@ -12,8 +12,10 @@ import { OrderModule } from './order/order.module';
 import { TicketModule } from './ticket/ticket.module';
 import { CheckinModule } from './checkin/checkin.module';
 import { WinstonModule } from 'nest-winston';
+import { CacheModule } from '@nestjs/cache-manager';
+import { redisStore } from 'cache-manager-redis-yet';
 import * as winston from 'winston';
-import 'dotenv/config'
+import 'dotenv/config';
 
 const isDev = process.env.NODE_ENV !== 'production';
 
@@ -60,6 +62,15 @@ const isDev = process.env.NODE_ENV !== 'production';
             ]
           : []),
       ],
+    }),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      useFactory: async (config: ConfigService) => ({
+        store: redisStore,
+        url: config.get<string>('REDIS_URL'), 
+        ttl: 60 * 1000,
+      }),
+      inject: [ConfigService],
     }),
     ConfigModule.forRoot({ isGlobal: true }),
     AuthModule,

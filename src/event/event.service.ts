@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
   ForbiddenException,
   Logger,
+  Inject,
 } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { PrismaService } from '../lib/prisma.service';
@@ -16,6 +17,9 @@ import { UpdateEventDto } from './dto/update-event.dto';
 import { CreateTicketType } from './dto/create-ticketType.dto';
 import { UpdateTicketType } from './dto/update-ticketType.dto';
 import { PromoCodeDto } from './dto/promoCode.dto';
+import { filter } from 'rxjs';
+import type { Cache } from 'cache-manager';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 @Injectable()
 export class EventService {
@@ -24,6 +28,7 @@ export class EventService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly supabaseService: SupabaseService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   private createSlug = (title: string) => {
@@ -88,6 +93,12 @@ export class EventService {
 
   async findAll(filters: FilterEvent) {
     try {
+      const cacheKey = `events: ${JSON.stringify(filters)}`;
+      const cached = await this.cacheManager.get(cacheKey);
+      if (cached) {
+        return cached;
+      }
+
       const {
         search,
         category,
@@ -138,6 +149,8 @@ export class EventService {
       if (data.length < 1) {
         return "Event doesn't exist ";
       }
+
+      await this.cacheManager.set(cacheKey, data, 5 * 60 * 1000);
 
       return {
         data,
@@ -192,7 +205,7 @@ export class EventService {
     try {
       await this.isOrganizerEvent(organizerId, eventId);
 
-      const event = await this.prisma.event.update({
+      const updated = await this.prisma.event.update({
         where: { id: eventId },
         data: updateData,
       });
@@ -201,7 +214,10 @@ export class EventService {
         `Event updated: ID ${eventId} by organizer ${organizerId}`,
       );
 
-      return event;
+      await this.cacheManager.del(`events:slug:${updated.slug}`);
+      await this.cacheManager.del('events:featured');
+
+      return updated;
     } catch (err) {
       this.logger.error(err.message, err.stack);
       throw new HttpException(err.message, err.status || 500);

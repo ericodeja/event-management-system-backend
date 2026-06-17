@@ -31,11 +31,11 @@ import { UpdateTicketType } from './dto/update-ticketType.dto';
 import { PromoCodeDto } from './dto/promoCode.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('organizer')
 @Controller('event')
 export class EventController {
   constructor(private readonly eventService: EventService) {}
 
+  @Roles('organizer')
   @Post()
   @UseInterceptors(FileInterceptor('coverImage'))
   async create(
@@ -87,6 +87,7 @@ export class EventController {
     });
   }
 
+  @Roles('organizer')
   @Patch(':eventId')
   async updateEvent(
     @Param('eventId') eventId: string,
@@ -104,6 +105,7 @@ export class EventController {
     });
   }
 
+  @Roles('organizer')
   @Patch(':eventId/publish')
   async publishEvent(
     @Param('eventId') eventId: string,
@@ -120,6 +122,7 @@ export class EventController {
     });
   }
 
+  @Roles('organizer')
   @Get(':eventId/cancel')
   async cancelEvent(
     @Param('eventId') eventId: string,
@@ -150,7 +153,7 @@ export class EventController {
   }
 
   //Ticket types
-
+  @Roles('organizer')
   @Post(':eventId/ticket-types')
   async createTicketType(
     @Param('eventId') eventId: string,
@@ -178,6 +181,7 @@ export class EventController {
     });
   }
 
+  @Roles('organizer')
   @Patch(':eventId/ticket-types/:ticketId')
   async updateTicketType(
     @Param() params: string[],
@@ -197,6 +201,7 @@ export class EventController {
     });
   }
 
+  @Roles('organizer')
   @Delete(':eventId/ticket-types/:ticketId')
   async deleteTicketType(
     @Param() params: string[],
@@ -214,13 +219,17 @@ export class EventController {
     });
   }
 
+  @Roles('organizer')
   @Post(':eventId/promo-codes')
   async createPromoCode(
     @Body() promoCodeInput: PromoCodeDto,
     @Param('eventId') eventId: string,
     @Res() res: Response,
   ) {
-    const promoCode = await this.eventService.createPromoCode(eventId, promoCodeInput);
+    const promoCode = await this.eventService.createPromoCode(
+      eventId,
+      promoCodeInput,
+    );
 
     return res.status(200).json({
       promoCode,
