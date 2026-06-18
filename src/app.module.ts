@@ -16,6 +16,8 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-yet';
 import * as winston from 'winston';
 import 'dotenv/config';
+import {BullModule} from '@nestjs/bullmq'
+import { EmailModule } from './email/email.module';
 
 const isDev = process.env.NODE_ENV !== 'production';
 
@@ -67,8 +69,16 @@ const isDev = process.env.NODE_ENV !== 'production';
       isGlobal: true,
       useFactory: async (config: ConfigService) => ({
         store: redisStore,
-        url: config.get<string>('REDIS_URL'), 
+        url: config.get<string>('REDIS_URL'),
         ttl: 60 * 1000,
+      }),
+      inject: [ConfigService],
+    }),
+    BullModule.forRootAsync({
+      useFactory: (config: ConfigService) => ({
+        connection: {
+          url: config.get('REDIS_URL'),
+        },
       }),
       inject: [ConfigService],
     }),
@@ -81,6 +91,7 @@ const isDev = process.env.NODE_ENV !== 'production';
     OrderModule,
     TicketModule,
     CheckinModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

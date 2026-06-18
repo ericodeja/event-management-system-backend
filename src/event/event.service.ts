@@ -17,7 +17,6 @@ import { UpdateEventDto } from './dto/update-event.dto';
 import { CreateTicketType } from './dto/create-ticketType.dto';
 import { UpdateTicketType } from './dto/update-ticketType.dto';
 import { PromoCodeDto } from './dto/promoCode.dto';
-import { filter } from 'rxjs';
 import type { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
