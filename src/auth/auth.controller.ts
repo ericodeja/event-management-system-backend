@@ -2,7 +2,6 @@ import {
   Controller,
   Post,
   Body,
-  Res,
   UseGuards,
   Req,
   HttpCode,
@@ -12,7 +11,7 @@ import { AuthService } from './auth.service';
 import { CreateUser } from './dto/createUser.dto';
 import { LoginUser } from './dto/loginUser.dto';
 import { RefreshTokenDto } from './dto/refreshToken.dto';
-import type { Response, Request } from 'express';
+import type { Request } from 'express';
 import { JwtAuthGuard } from '../common/guards/auth.guard';
 
 @Controller('auth')
@@ -20,26 +19,23 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('/register')
-  async register(@Body() userData: CreateUser, @Res() res: Response) {
+  async register(@Body() userData: CreateUser) {
     const response = await this.authService.createUser(userData);
-    return res.status(201).json({
+    return {
       message: 'Registration successful. Please verify your email.',
       user: response,
-    });
+    };
   }
 
   @Post('/login')
-  async login(@Body() userData: LoginUser, @Res() res: Response) {
+  async login(@Body() userData: LoginUser) {
     const result = await this.authService.loginUser(userData);
-
-    return res.status(200).json({
-      result,
-    });
+    return { result };
   }
 
   @Post('/refresh')
   async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
-    const result = await this.refreshToken(refreshTokenDto);
+    return await this.authService.refresh(refreshTokenDto);
   }
 
   @HttpCode(HttpStatus.OK)
