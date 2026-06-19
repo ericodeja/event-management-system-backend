@@ -9,7 +9,15 @@ async function bootstrap() {
     rawBody: true,
     bufferLogs: true,
   });
-  app.useGlobalFilters(new HttpExceptionFilter());
+  app.enableCors({
+    origin: 'http://localhost:5173', // your React/Vite dev URL
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  });
+
+  // pass logger instance to the filter
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -17,7 +25,11 @@ async function bootstrap() {
       transform: true,
     }),
   );
+  
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
+  const logger = app.get(WINSTON_MODULE_NEST_PROVIDER);
+
+  app.useGlobalFilters(new HttpExceptionFilter(logger));
 
   await app.listen(process.env.PORT ?? 3000);
 }

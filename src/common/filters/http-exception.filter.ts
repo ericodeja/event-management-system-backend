@@ -4,14 +4,19 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
-  Logger,
+  Inject,
+ type  LoggerService,
 } from '@nestjs/common';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { Prisma } from '../../generated/prisma/client';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(HttpExceptionFilter.name);
+  constructor(
+    @Inject(WINSTON_MODULE_NEST_PROVIDER)
+    private readonly logger: LoggerService,
+  ) {}
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
@@ -22,7 +27,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
     let message: string | string[] = 'Internal server error';
 
     if (exception instanceof HttpException) {
-      // NestJS HTTP exceptions (including validation errors from ValidationPipe)
       status = exception.getStatus();
       const res = exception.getResponse();
       message =
@@ -30,24 +34,22 @@ export class HttpExceptionFilter implements ExceptionFilter {
           ? (res as any).message
           : exception.message;
     } else if (exception instanceof Prisma.PrismaClientKnownRequestError) {
-      // Known Prisma errors (e.g. constraint violations)
-      const prismaError = exception as Prisma.PrismaClientKnownRequestError;
-      switch (prismaError.code) {
+      switch (exception.code) {
         case 'P2002': {
           status = HttpStatus.CONFLICT;
           const fields =
-            (prismaError.meta?.target as string[])?.join(', ') ?? 'field';
+            (exception.meta?.target as string[])?.join(', ') ?? 'field';
           message = `A record with this ${fields} already exists`;
           break;
         }
         case 'P2025': {
           status = HttpStatus.NOT_FOUND;
-          message = (prismaError.meta?.cause as string) ?? 'Record not found';
+          message = (exception.meta?.cause as string) ?? 'Record not found';
           break;
         }
         case 'P2003': {
           status = HttpStatus.BAD_REQUEST;
-          const field = prismaError.meta?.field_name ?? 'related record';
+          const field = exception.meta?.field_name ?? 'related record';
           message = `Invalid reference: ${field} does not exist`;
           break;
         }
@@ -58,29 +60,34 @@ export class HttpExceptionFilter implements ExceptionFilter {
         }
         default: {
           status = HttpStatus.BAD_REQUEST;
-          message = `Database error [${prismaError.code}]: ${prismaError.message.split('\n').pop()?.trim() ?? prismaError.code}`;
+          message = `Database error [${exception.code}]`;
           break;
         }
       }
     } else if (exception instanceof Prisma.PrismaClientValidationError) {
-      // Prisma validation errors (e.g. missing required fields, wrong types)
       status = HttpStatus.BAD_REQUEST;
       message = 'Invalid data provided to the database';
     } else if (exception instanceof Error) {
       message = exception.message;
     }
 
-    this.logger.error(
-      `${request.method} ${request.url} → ${status}`,
-      exception instanceof Error ? exception.stack : String(exception),
-    );
+    // log differently based on status code
+    const logMessage = `${request.method} ${request.url} → ${status} ${message}`;
+    const stack =
+      exception instanceof Error ? exception.stack : String(exception);
 
-    response.status(status).json({
+    if (status >= 500) {
+      this.logger.error(logMessage, stack, HttpExceptionFilter.name);
+    } else if (status >= 400) {
+      this.logger.warn(logMessage, HttpExceptionFilter.name);
+    }
+
+    return response.status(status).json({
       success: false,
+      message,
       statusCode: status,
       timestamp: new Date().toISOString(),
       path: request.url,
-      message,
     });
   }
 }
